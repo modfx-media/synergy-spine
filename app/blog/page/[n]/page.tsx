@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BlogListing, TOTAL_PAGES } from "@/components/BlogListing";
-
+import { BlogListing, POSTS_PER_PAGE } from "@/components/BlogListing";
+import { getPublishedBlogPosts } from "@/lib/ranked/posts";
+import { toBlogPosts } from "@/lib/ranked/ui";
 import { SITE_ORIGIN } from "@/lib/site";
 
-export function generateStaticParams() {
-  // Page 1 lives at /blog/, so generate routes only for pages 2..N
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const posts = toBlogPosts(await getPublishedBlogPosts().catch(() => []));
+  const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
   const params: { n: string }[] = [];
-  for (let i = 2; i <= TOTAL_PAGES; i++) {
+  for (let i = 2; i <= totalPages; i++) {
     params.push({ n: String(i) });
   }
   return params;
 }
-
-export const dynamicParams = false;
 
 export async function generateMetadata({
   params,
@@ -49,8 +52,10 @@ export default async function BlogPaginatedPage({
 }) {
   const { n } = await params;
   const page = Number.parseInt(n, 10);
-  if (!Number.isFinite(page) || page < 2 || page > TOTAL_PAGES) {
+  const posts = toBlogPosts(await getPublishedBlogPosts());
+  const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+  if (!Number.isFinite(page) || page < 2 || page > totalPages) {
     notFound();
   }
-  return <BlogListing page={page} />;
+  return <BlogListing page={page} posts={posts} />;
 }

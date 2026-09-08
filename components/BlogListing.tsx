@@ -5,10 +5,9 @@ import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
 import Reveal from "@/components/Reveal";
 import BookTrigger from "@/components/booking/BookTrigger";
-import { POSTS, CATEGORIES, categorySlug, type BlogPost } from "@/lib/blog-posts";
+import { CATEGORIES, categorySlug, type BlogPost } from "@/lib/blog-posts";
 
 export const POSTS_PER_PAGE = 12;
-export const TOTAL_PAGES = Math.max(1, Math.ceil(POSTS.length / POSTS_PER_PAGE));
 
 import { SITE_ORIGIN } from "@/lib/site";
 
@@ -16,10 +15,10 @@ function pageHref(page: number): string {
   return page <= 1 ? "/blog/" : `/blog/page/${page}/`;
 }
 
-export function BlogListing({ page }: { page: number }) {
+export function BlogListing({ page, posts }: { page: number; posts: BlogPost[] }) {
+  const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
   const start = (page - 1) * POSTS_PER_PAGE;
-  const visible = POSTS.slice(start, start + POSTS_PER_PAGE);
-  const totalPages = TOTAL_PAGES;
+  const visible = posts.slice(start, start + POSTS_PER_PAGE);
 
   const blogJsonLd = {
     "@context": "https://schema.org",
@@ -96,7 +95,7 @@ export function BlogListing({ page }: { page: number }) {
                 <strong className="text-brand-navyDark">
                   {start + 1}{start + visible.length}
                 </strong>{" "}
-                of <strong className="text-brand-navyDark">{POSTS.length}</strong> articles
+                of <strong className="text-brand-navyDark">{posts.length}</strong> articles
               </p>
               <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-brand-textLight">
                 Page {page} of {totalPages}
@@ -166,7 +165,7 @@ function PostCard({ post }: { post: BlogPost }) {
         {post.featureImage ? (
           <Image
             src={post.featureImage}
-            alt={post.title}
+            alt={post.coverAlt || post.title}
             fill
             sizes="(min-width: 1024px) 360px, (min-width: 768px) 50vw, 100vw"
             className="object-cover transition duration-500 group-hover:scale-105"

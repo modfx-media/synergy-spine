@@ -6,20 +6,24 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
 import Reveal from "@/components/Reveal";
+import RankedArticleBody from "@/components/RankedArticleBody";
 import {
   BLOG_AUTHOR,
-  POSTS,
   categorySlug,
-  getPostBySlug,
-  getRelatedPosts,
 } from "@/lib/blog-posts";
 import { getPostContent } from "@/lib/blog-content";
+import { getPublishedBlogPost, getPublishedBlogPosts, getPublishedBlogSlugs } from "@/lib/ranked/posts";
+import { relatedFromPosts, toBlogPost, toBlogPosts } from "@/lib/ranked/ui";
 
 import BookTrigger from "@/components/booking/BookTrigger";
 import { SITE_ORIGIN } from "@/lib/site";
 
-export function generateStaticParams() {
-  return POSTS.map((p) => ({ slug: p.slug }));
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const slugs = await getPublishedBlogSlugs().catch(() => []);
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -28,11 +32,17 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) {
+  const data = await getPublishedBlogPost(slug);
+  if (!data) {
     return { title: "Post not found | Synergy Spine & Nerve Center" };
   }
+  const post = toBlogPost(data);
   const url = `${SITE_ORIGIN}/blog/${post.slug}/`;
+  const ogImage = post.featureImage
+    ? post.featureImage.startsWith("http")
+      ? post.featureImage
+      : `${SITE_ORIGIN}${post.featureImage}`
+    : undefined;
   return {
     title: `${post.title} | Synergy Spine & Nerve Center`,
     description: post.excerpt,
@@ -43,6 +53,7 @@ export async function generateMetadata({
       url,
       type: "article",
       publishedTime: post.isoDate,
+      images: ogImage ? [{ url: ogImage, alt: post.coverAlt || post.title }] : undefined,
     },
   };
 }
@@ -53,19 +64,24 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) notFound();
+  const data = await getPublishedBlogPost(slug);
+  if (!data) notFound();
 
-  const related = getRelatedPosts(slug, 3);
-  const content = getPostContent(slug);
+  const post = toBlogPost(data);
+  const allPosts = toBlogPosts(await getPublishedBlogPosts());
+  const related = relatedFromPosts(allPosts, slug, 3);
+  const localHtml = getPostContent(slug);
   const url = `${SITE_ORIGIN}/blog/${post.slug}/`;
+  const coverSrc = post.featureImage;
 
   const articleJsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: post.title,
     description: post.excerpt,
-    image: post.featureImage ? [post.featureImage] : undefined,
+    image: coverSrc
+      ? [coverSrc.startsWith("http") ? coverSrc : `${SITE_ORIGIN}${coverSrc}`]
+      : undefined,
     author: {
       "@type": "Person",
       name: BLOG_AUTHOR,
@@ -136,21 +152,19 @@ export default async function BlogPostPage({
         </section>
 
         {/* FEATURE IMAGE */}
-        {post.featureImage ? (
+        {coverSrc ? (
           <section className="bg-brand-bg pt-10 lg:pt-14">
             <div className="mx-auto max-w-5xl px-6">
-              <Reveal>
-                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl ring-1 ring-black/5 shadow-lg">
-                  <Image
-                    src={post.featureImage}
-                    alt={post.title}
-                    fill
-                    sizes="(min-width: 1024px) 1024px, 100vw"
-                    className="object-cover"
-                    priority
-                  />
-                </div>
-              </Reveal>
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl ring-1 ring-black/5 shadow-lg">
+                <Image
+                  src={coverSrc}
+                  alt={post.coverAlt || post.title}
+                  fill
+                  sizes="(min-width: 1024px) 1024px, 100vw"
+                  className="object-cover"
+                  priority
+                />
+              </div>
             </div>
           </section>
         ) : null}
@@ -161,10 +175,28 @@ export default async function BlogPostPage({
             {/* Article */}
             <Reveal as="article">
               <div className="rounded-2xl bg-white p-8 lg:p-12 ring-1 ring-black/5 shadow-sm">
-                <div
-                  className="prose prose-lg max-w-3xl prose-headings:font-serif prose-headings:text-brand-navyDark prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-brand-text prose-p:leading-relaxed prose-a:text-brand-blue prose-a:no-underline hover:prose-a:underline prose-strong:text-brand-navyDark prose-li:text-brand-text prose-img:rounded-xl prose-img:shadow-md"
-                  dangerouslySetInnerHTML={{ __html: content }}
-                />
+                {localHtml ? (
+                  <div
+                    className="prose prose-lg max-w-3xl prose-headings:font-serif prose-headings:text-brand-navyDark prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-brand-text prose-p:leading-relaxed prose-a:text-brand-blue prose-a:no-underline hover:prose-a:underline prose-strong:text-brand-navyDark prose-li:text-brand-text prose-img:rounded-xl prose-img:shadow-md"
+                    dangerouslySetInnerHTML={{ __html: localHtml }}
+                  />
+                ) : post.sections?.length ? (
+                  <>
+                    <RankedArticleBody intro={post.intro} title={post.title} sections={post.sections} />
+                    {post.cta ? (
+                      <p className="mt-10">
+                        <Link
+                          href={post.cta.href}
+                          className="inline-flex rounded-full bg-brand-gold px-6 py-3 text-sm font-bold uppercase tracking-wide text-brand-navyDark hover:bg-brand-goldSoft transition"
+                        >
+                          {post.cta.label}
+                        </Link>
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="text-brand-text leading-relaxed">{post.excerpt}</p>
+                )}
 
                 <hr className="mt-12 border-black/5" />
 

@@ -51,6 +51,14 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "picsum.photos",
+      },
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+      {
+        protocol: "https",
         hostname: "i.ytimg.com",
       },
       {
@@ -58,6 +66,9 @@ const nextConfig: NextConfig = {
         hostname: "img.youtube.com",
       },
     ],
+  },
+  outputFileTracingExcludes: {
+    "*": ["./public/images/**", "./public/**/*.mp4", "./public/**/*.webm"],
   },
 };
 

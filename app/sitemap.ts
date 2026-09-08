@@ -6,6 +6,8 @@ import {
   CHIROPRACTIC_SERVICES,
   MASSAGE_SERVICES,
 } from "@/lib/services-catalog";
+import { getPublishedBlogPosts } from "@/lib/ranked/posts";
+import { toBlogPosts } from "@/lib/ranked/ui";
 
 import { SITE_ORIGIN as BASE_URL } from "@/lib/site";
 
@@ -145,13 +147,15 @@ function buildEntries(
 
 const POSTS_PER_PAGE = 12;
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date();
+  const published = toBlogPosts(await getPublishedBlogPosts().catch(() => []));
+  const listing = published.length ? published : POSTS;
 
-  const blogPostEntries: Entry[] = POSTS.map((p) => ({
+  const blogPostEntries: Entry[] = listing.map((p) => ({
     url: `${BASE_URL}/blog/${p.slug}/`,
     lastModified: new Date(p.isoDate),
-    changeFrequency: "yearly",
+    changeFrequency: "weekly",
     priority: 0.5,
   }));
 
@@ -162,7 +166,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.5,
   }));
 
-  const totalBlogPages = Math.max(1, Math.ceil(POSTS.length / POSTS_PER_PAGE));
+  const totalBlogPages = Math.max(1, Math.ceil(listing.length / POSTS_PER_PAGE));
   const blogPaginationEntries: Entry[] = [];
   for (let i = 2; i <= totalBlogPages; i++) {
     blogPaginationEntries.push({

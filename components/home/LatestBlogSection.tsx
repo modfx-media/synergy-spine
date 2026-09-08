@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
-import { POSTS } from "@/lib/blog-posts";
+import { getPublishedBlogPosts } from "@/lib/ranked/posts";
+import { toBlogPosts } from "@/lib/ranked/ui";
 
-export default function LatestBlogSection() {
-  const featured = POSTS.slice(0, 3);
+export default async function LatestBlogSection() {
+  const featured = toBlogPosts(await getPublishedBlogPosts()).slice(0, 3);
 
   return (
     <section className="relative bg-brand-bg py-24 lg:py-32 overflow-hidden">
@@ -83,7 +84,7 @@ export default function LatestBlogSection() {
                   {post.featureImage ? (
                     <Image
                       src={post.featureImage}
-                      alt={post.title}
+                      alt={post.coverAlt || post.title}
                       fill
                       sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw"
                       className="object-cover transition duration-700 group-hover:scale-110"

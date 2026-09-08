@@ -10,10 +10,14 @@ import {
   CATEGORIES,
   categorySlug,
   getCategoryByslug,
-  getPostsByCategory,
   type BlogPost,
 } from "@/lib/blog-posts";
+import { getPublishedBlogPosts } from "@/lib/ranked/posts";
+import { toBlogPosts } from "@/lib/ranked/ui";
 import { SITE_ORIGIN } from "@/lib/site";
+
+export const revalidate = 3600;
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return CATEGORIES.map((c) => ({ slug: categorySlug(c) }));
@@ -52,7 +56,9 @@ export default async function CategoryPage({
   const category = getCategoryByslug(slug);
   if (!category) notFound();
 
-  const posts = getPostsByCategory(slug);
+  const posts = toBlogPosts(await getPublishedBlogPosts()).filter(
+    (p) => categorySlug(p.category) === slug,
+  );
   const visible = posts;
 
   const breadcrumbJsonLd = {
@@ -188,7 +194,7 @@ function PostCard({ post }: { post: BlogPost }) {
         {post.featureImage ? (
           <Image
             src={post.featureImage}
-            alt={post.title}
+                    alt={post.coverAlt || post.title}
             fill
             sizes="(min-width: 1024px) 360px, (min-width: 768px) 50vw, 100vw"
             className="object-cover transition duration-500 group-hover:scale-105"

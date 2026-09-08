@@ -21,6 +21,11 @@ export type BlogPost = {
   readTime: string;
   /** Optional featured image URL. */
   featureImage: string | null;
+  intro?: string;
+  sections?: { heading: string; body: string[] }[];
+  coverAlt?: string;
+  cta?: { label: string; href: string };
+  source?: "local" | "ranked";
 };
 
 export const CATEGORIES: BlogCategory[] = [

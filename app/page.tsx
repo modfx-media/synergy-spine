@@ -16,6 +16,8 @@ import HomeLocalIntent from "@/components/home/HomeLocalIntent";
 import HomeFaq from "@/components/home/HomeFaq";
 import { organizationSchema, SITE_ORIGIN } from "@/lib/site";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: {
     absolute: "Chiropractor in Rio Rancho, NM | Synergy Spine & Nerve Center",
