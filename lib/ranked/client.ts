@@ -18,13 +18,20 @@ function rankedConfig() {
   }
 }
 
+/** Ranked CMS is disabled for this site. Set RANKED_ENABLED=true to turn it back on. */
+export function isRankedEnabled(): boolean {
+  return process.env.RANKED_ENABLED === "true";
+}
+
 export function isRankedConfigured(): boolean {
-  const { apiKey, projectId } = rankedConfig()
-  return Boolean(apiKey && projectId)
+  if (!isRankedEnabled()) return false;
+  const { apiKey, projectId } = rankedConfig();
+  return Boolean(apiKey && projectId);
 }
 
 export function hasRankedApiKey(): boolean {
-  return Boolean(rankedConfig().apiKey)
+  if (!isRankedEnabled()) return false;
+  return Boolean(rankedConfig().apiKey);
 }
 
 function thisProjectId(projectId?: string): string | undefined {

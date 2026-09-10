@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isRankedEnabled } from '@/lib/ranked/client'
 import { syncAllRankedSites } from '@/lib/ranked/sync'
 
 export const runtime = 'nodejs'
@@ -17,6 +18,14 @@ function isAuthorized(request: Request): boolean {
 
 export async function GET(request: Request) {
   if (!isAuthorized(request)) return unauthorized()
+  if (!isRankedEnabled()) {
+    return NextResponse.json({
+      ok: true,
+      disabled: true,
+      reason: 'Ranked CMS is disabled (set RANKED_ENABLED=true to re-enable)',
+      ranAt: new Date().toISOString(),
+    })
+  }
   const result = await syncAllRankedSites()
   return NextResponse.json({ ok: true, ranAt: new Date().toISOString(), ...result })
 }

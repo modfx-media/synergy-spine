@@ -172,8 +172,8 @@ export default async function BlogPostPage({
         {/* BODY + SIDEBAR */}
         <section className="bg-brand-bg py-16 lg:py-20">
           <div className="mx-auto max-w-6xl px-6 grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
-            {/* Article */}
-            <Reveal as="article">
+            {/* Article — not wrapped in Reveal: tall posts stayed opacity-0 forever */}
+            <article>
               <div className="rounded-2xl bg-white p-8 lg:p-12 ring-1 ring-black/5 shadow-sm">
                 {localHtml ? (
                   <div
@@ -226,7 +226,7 @@ export default async function BlogPostPage({
                   </div>
                 </div>
               </div>
-            </Reveal>
+            </article>
 
             {/* Sidebar */}
             <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">

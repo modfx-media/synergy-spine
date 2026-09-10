@@ -45,6 +45,30 @@ export function categorySlug(c: BlogCategory): string {
 
 export const POSTS: BlogPost[] = [
   {
+    slug: "common-driving-mistakes-that-lead-to-auto-injuries",
+    title: "Common Driving Mistakes That Lead to Auto Injuries",
+    excerpt:
+      "Learn everyday habits that raise crash and injury risk, plus when to see a car accident chiropractor in Rio Rancho for pain relief and mobility care.",
+    category: "Chiropractic Treatment",
+    date: "September 8, 2026",
+    isoDate: "2026-09-08",
+    readTime: "7 min read",
+    featureImage:
+      "/blog-images/common-driving-mistakes-that-lead-to-auto-injuries.jpeg",
+  },
+  {
+    slug: "stop-daily-habits-that-trigger-sciatica-pain",
+    title: "Stop Daily Habits That Trigger Sciatica Pain",
+    excerpt:
+      "Learn which everyday moves worsen nerve pain and how sciatica treatment in Rio Rancho can help you stay active with less discomfort.",
+    category: "Chiropractic Care",
+    date: "September 1, 2026",
+    isoDate: "2026-09-01",
+    readTime: "8 min read",
+    featureImage:
+      "/blog-images/stop-daily-habits-that-trigger-sciatica-pain.jpeg",
+  },
+  {
     slug: "desk-ergonomics-tips-to-ease-low-back-pain-at-work",
     title: "Desk Ergonomics Tips to Ease Low Back Pain at Work",
     excerpt:

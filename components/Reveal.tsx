@@ -30,6 +30,8 @@ export default function Reveal({
       return;
     }
 
+    // Tall elements (e.g. full blog articles) can never hit a high threshold when
+    // they are taller than the viewport, so use 0 and treat any intersection as shown.
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -41,10 +43,17 @@ export default function Reveal({
           }
         }
       },
-      { threshold: 0.15, rootMargin: "0px 0px -10% 0px" }
+      { threshold: 0, rootMargin: "0px 0px -5% 0px" }
     );
     observer.observe(node);
-    return () => observer.disconnect();
+
+    // Safety: if the observer never reports (edge cases / older browsers), show content.
+    const fallback = window.setTimeout(() => setVisible(true), 1200);
+
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, [once]);
 
   const initial =

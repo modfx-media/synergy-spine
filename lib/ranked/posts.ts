@@ -75,7 +75,7 @@ export async function getLiveRankedBlogPosts(
   projectId?: string,
   opts: { generateCovers?: boolean; generateForSlug?: string } = {},
 ): Promise<BlogPostData[]> {
-  if (!isRankedConfigured() && !projectId) return []
+  if (!isRankedConfigured()) return []
   const id = await getThisSiteProjectId(projectId)
   if (!process.env.RANKED_API_KEY || !id) return []
 

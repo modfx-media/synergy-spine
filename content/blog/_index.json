@@ -1,5 +1,27 @@
 [
   {
+    "slug": "common-driving-mistakes-that-lead-to-auto-injuries",
+    "title": "Common Driving Mistakes That Lead to Auto Injuries",
+    "excerpt": "Learn everyday habits that raise crash and injury risk, plus when to see a car accident chiropractor in Rio Rancho for pain relief and mobility care.",
+    "category": "Chiropractic Treatment",
+    "date": "September 8, 2026",
+    "isoDate": "2026-09-08",
+    "readTime": "7 min read",
+    "featureImage": "/blog-images/common-driving-mistakes-that-lead-to-auto-injuries.jpeg",
+    "hasContent": true
+  },
+  {
+    "slug": "stop-daily-habits-that-trigger-sciatica-pain",
+    "title": "Stop Daily Habits That Trigger Sciatica Pain",
+    "excerpt": "Learn which everyday moves worsen nerve pain and how sciatica treatment in Rio Rancho can help you stay active with less discomfort.",
+    "category": "Chiropractic Care",
+    "date": "September 1, 2026",
+    "isoDate": "2026-09-01",
+    "readTime": "8 min read",
+    "featureImage": "/blog-images/stop-daily-habits-that-trigger-sciatica-pain.jpeg",
+    "hasContent": true
+  },
+  {
     "slug": "desk-ergonomics-tips-to-ease-low-back-pain-at-work",
     "title": "Desk Ergonomics Tips to Ease Low Back Pain at Work",
     "excerpt": "Set up your chair, monitor, and keyboard to cut low back strain with quick self-tests and advice from a back pain doctor in Rio Rancho.",
@@ -30,6 +52,17 @@
     "isoDate": "2026-08-11",
     "readTime": "6 min read",
     "featureImage": "/blog-images/car-accident-recovery-guide-for-rio-rancho-drivers.png",
+    "hasContent": true
+  },
+  {
+    "slug": "rio-rancho-driving-tips-for-sciatica-pain-relief",
+    "title": "Rio Rancho Driving Tips for Sciatica Pain Relief",
+    "excerpt": "Set up your car for less back and leg pain with posture, mirrors, and stretch breaks from a sciatica doctor in Rio Rancho for safer driving.",
+    "category": "Chiropractic Care",
+    "date": "August 4, 2026",
+    "isoDate": "2026-08-04",
+    "readTime": "5 min read",
+    "featureImage": "/blog-images/rio-rancho-driving-tips-for-sciatica-pain-relief.jpg",
     "hasContent": true
   },
   {
