@@ -21,6 +21,8 @@ export type BlogPost = {
   readTime: string;
   /** Optional featured image URL. */
   featureImage: string | null;
+  /** On-page H1 when it differs from the SEO title. */
+  h1?: string;
   intro?: string;
   sections?: { heading: string; body: string[] }[];
   coverAlt?: string;
@@ -44,6 +46,21 @@ export function categorySlug(c: BlogCategory): string {
 }
 
 export const POSTS: BlogPost[] = [
+  {
+    slug: "chronic-neck-pain-relief-with-medical-massage",
+    title: "Chronic Neck Pain Relief With Medical Massage",
+    excerpt:
+      "Discover how medical massage in Rio Rancho can ease chronic neck pain, restore mobility, and support long-term wellness without medication.",
+    category: "Chiropractic Treatment",
+    date: "September 15, 2026",
+    isoDate: "2026-09-15",
+    readTime: "6 min read",
+    featureImage:
+      "/blog-images/chronic-neck-pain-relief-with-medical-massage.png",
+    h1: "Find Lasting Relief From Chronic Neck Pain",
+    coverAlt:
+      "Man at a desk holding his neck in pain from chronic neck stiffness",
+  },
   {
     slug: "common-driving-mistakes-that-lead-to-auto-injuries",
     title: "Common Driving Mistakes That Lead to Auto Injuries",

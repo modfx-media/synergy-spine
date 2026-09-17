@@ -8,7 +8,7 @@ export function getLocalBlogPosts(): BlogPostData[] {
     slug: post.slug,
     title: post.title,
     metaDescription: post.excerpt,
-    h1: post.title,
+    h1: post.h1 || post.title,
     publishDate: post.isoDate,
     intro: post.excerpt,
     coverImage: post.featureImage || DEFAULT_COVER,

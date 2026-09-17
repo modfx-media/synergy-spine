@@ -44,7 +44,10 @@ export async function generateMetadata({
       : `${SITE_ORIGIN}${post.featureImage}`
     : undefined;
   return {
-    title: `${post.title} | Synergy Spine & Nerve Center`,
+    title:
+      post.h1 && post.h1 !== post.title
+        ? { absolute: post.title }
+        : `${post.title} | Synergy Spine & Nerve Center`,
     description: post.excerpt,
     alternates: { canonical: url },
     openGraph: {
@@ -68,6 +71,7 @@ export default async function BlogPostPage({
   if (!data) notFound();
 
   const post = toBlogPost(data);
+  const heading = post.h1 || post.title;
   const allPosts = toBlogPosts(await getPublishedBlogPosts());
   const related = relatedFromPosts(allPosts, slug, 3);
   const localHtml = getPostContent(slug);
@@ -77,7 +81,7 @@ export default async function BlogPostPage({
   const articleJsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
-    headline: post.title,
+    headline: heading,
     description: post.excerpt,
     image: coverSrc
       ? [coverSrc.startsWith("http") ? coverSrc : `${SITE_ORIGIN}${coverSrc}`]
@@ -108,7 +112,7 @@ export default async function BlogPostPage({
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_ORIGIN}/` },
       { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_ORIGIN}/blog/` },
-      { "@type": "ListItem", position: 3, name: post.title, item: url },
+      { "@type": "ListItem", position: 3, name: heading, item: url },
     ],
   };
 
@@ -127,7 +131,7 @@ export default async function BlogPostPage({
               items={[
                 { label: "Home", href: "/" },
                 { label: "Blog", href: "/blog/" },
-                { label: post.title },
+                { label: heading },
               ]}
             />
             <div className="mt-8">
@@ -138,7 +142,7 @@ export default async function BlogPostPage({
                 {post.category}
               </Link>
               <h1 className="section-title mt-5 text-3xl md:text-5xl font-semibold leading-[1.1] max-w-4xl">
-                {post.title}
+                {heading}
               </h1>
               <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/80">
                 <time dateTime={post.isoDate}>{post.date}</time>
