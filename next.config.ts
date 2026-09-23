@@ -1,7 +1,9 @@
+import { withPayload } from "@payloadcms/next/withPayload";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   trailingSlash: true,
+  skipTrailingSlashRedirect: true,
   async redirects() {
     return [
       {
@@ -70,6 +72,12 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     "*": ["./public/images/**", "./public/**/*.mp4", "./public/**/*.webm"],
   },
+  serverExternalPackages: [
+    "pg",
+    "@payloadcms/db-vercel-postgres",
+    "@neondatabase/serverless",
+    "@vercel/postgres",
+  ],
 };
 
-export default nextConfig;
+export default withPayload(nextConfig, { devBundleServerPackages: false });
