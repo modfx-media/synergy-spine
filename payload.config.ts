@@ -22,6 +22,18 @@ const pushSchema =
   process.env.CMS_IMPORT_APPLY !== "1" &&
   process.env.PAYLOAD_DB_PUSH !== "false"
 
+/** Neon console URLs include channel_binding, which the serverless WebSocket driver rejects. */
+function databaseURL(): string {
+  const raw = process.env.DATABASE_URL || process.env.POSTGRES_URL || ""
+  try {
+    const url = new URL(raw)
+    url.searchParams.delete("channel_binding")
+    return url.toString()
+  } catch {
+    return raw
+  }
+}
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -52,7 +64,7 @@ export default buildConfig({
   },
   db: vercelPostgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL || "",
+      connectionString: databaseURL(),
     },
     forceUseVercelPostgres: true,
     push: pushSchema,

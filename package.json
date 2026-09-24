@@ -8,9 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "cms:export": "tsx scripts/build-content-export.ts",
-    "cms:import": "tsx scripts/cms-import.ts",
-    "cms:validate-export": "tsx scripts/cms-validate-export.ts",
+    "cms:export": "node --env-file=.env.local --import tsx scripts/build-content-export.ts",
+    "cms:import": "node --env-file=.env.local --import tsx scripts/cms-import.ts",
+    "cms:validate-export": "node --env-file=.env.local --import tsx scripts/cms-validate-export.ts",
     "generate:importmap": "payload generate:importmap",
     "generate:types": "payload generate:types"
   },
@@ -40,5 +40,9 @@
     "eslint-config-next": "^16.3.6",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@img/sharp-linux-x64": "0.35.4",
+    "@img/sharp-libvips-linux-x64": "1.3.3"
   }
 }

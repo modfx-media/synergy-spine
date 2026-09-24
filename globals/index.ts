@@ -35,7 +35,7 @@ export const Header: GlobalConfig = {
           fields: [
             ...linkFields,
             {
-              name: "children",
+              name: "items",
               type: "array",
               fields: linkFields,
             },
