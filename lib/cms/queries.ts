@@ -66,7 +66,7 @@ export async function queryRoutedContentByPath(
     const doc = result.docs[0]
     if (!doc) continue
     if (!draft && doc._status !== "published") continue
-    return { collection, doc: doc as RoutedContent["doc"] }
+    return { collection, doc: doc as unknown as RoutedContent["doc"] }
   }
 
   return null

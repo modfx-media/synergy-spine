@@ -25,7 +25,7 @@ async function loadPublishedSitemapMeta(): Promise<Map<string, SitemapMeta>> {
         overrideAccess: true,
         pagination: true,
       })
-      for (const doc of result.docs as RoutedContent["doc"][]) {
+      for (const doc of result.docs as unknown as RoutedContent["doc"][]) {
         if (typeof doc.path !== "string" || !doc.path) continue
         const meta = doc.meta
         const updated = doc.sourceUpdatedAt || doc.updatedAt
