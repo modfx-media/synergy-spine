@@ -47,6 +47,21 @@ export function categorySlug(c: BlogCategory): string {
 
 export const POSTS: BlogPost[] = [
   {
+    slug: "walk-rio-rancho-trails-with-sciatica-safe-tips",
+    title: "Walk Rio Rancho Trails With Sciatica Safe Tips",
+    excerpt:
+      "Enjoy Walkers Overlook with warm ups, pacing, footwear tips, and red flags. Learn options for sciatica treatment in Rio Rancho to stay active safely",
+    category: "Chiropractic Care",
+    date: "September 22, 2026",
+    isoDate: "2026-09-22",
+    readTime: "7 min read",
+    featureImage:
+      "/blog-images/walk-rio-rancho-trails-with-sciatica-safe-tips.jpg",
+    h1: "Walk Rio Rancho with Less Sciatic Nerve Pain",
+    coverAlt:
+      "Woman resting on a rock along a desert trail, holding her hip after sciatic pain",
+  },
+  {
     slug: "chronic-neck-pain-relief-with-medical-massage",
     title: "Chronic Neck Pain Relief With Medical Massage",
     excerpt:
