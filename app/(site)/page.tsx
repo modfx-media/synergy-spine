@@ -16,6 +16,7 @@ import CTASection from "@/components/home/CTASection";
 import HomeLocalIntent from "@/components/home/HomeLocalIntent";
 import HomeFaq from "@/components/home/HomeFaq";
 import { organizationSchema, SITE_ORIGIN } from "@/lib/site";
+import { getDisplayedGoogleReviews } from "@/lib/google-reviews";
 
 export const revalidate = 3600;
 
@@ -40,13 +41,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return withCMSMetadata("/", cmsFallbackMetadata);
 }
 
-export default function Home() {
+export default async function Home() {
+  const googleReviews = await getDisplayedGoogleReviews();
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(organizationSchema(`${SITE_ORIGIN}/`)),
+          __html: JSON.stringify(organizationSchema(`${SITE_ORIGIN}/`, googleReviews)),
         }}
       />
       <AnnouncementBar />
@@ -59,7 +62,9 @@ export default function Home() {
         <HomeLocalIntent />
         <VideoSection />
         <HealCTASection />
-        <TestimonialsSection />
+        {googleReviews.reviews.length > 0 ? (
+          <TestimonialsSection reviews={googleReviews.reviews} meta={googleReviews.meta} />
+        ) : null}
         <HomeFaq />
         <LatestBlogSection />
         <CTASection />

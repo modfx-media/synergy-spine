@@ -1,46 +1,22 @@
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
+import type { GoogleReview, GoogleReviewsMeta } from "@/lib/reviews";
 
-type Testimonial = {
-  quote: string;
-  name: string;
-  location: string;
-  initials: string;
-  tint: "blue" | "gold" | "navy";
-};
+const TINTS = ["blue", "gold", "navy"] as const;
 
-const TESTIMONIALS: Testimonial[] = [
-  {
-    quote:
-      "Dr. Brad and his team have changed my life. I came in with debilitating back pain and after just a few weeks of care, I feel like a new person.",
-    name: "Maria G.",
-    location: "Rio Rancho, NM",
-    initials: "MG",
-    tint: "blue",
-  },
-  {
-    quote:
-      "The whole team at Synergy is incredible. They truly care about your wellbeing, not just getting you in and out. Highly recommend to anyone in the area.",
-    name: "James T.",
-    location: "Albuquerque, NM",
-    initials: "JT",
-    tint: "gold",
-  },
-  {
-    quote:
-      "I've been going to Synergy for over a year now. My chronic back pain and posture have improved dramatically. The evidence-based approach really works.",
-    name: "Sandra R.",
-    location: "Bernalillo, NM",
-    initials: "SR",
-    tint: "navy",
-  },
-];
-
-const TINTS = {
+const TINT_GRADIENTS = {
   blue: "from-brand-blue to-brand-blueLight",
   gold: "from-brand-gold to-brand-goldSoft",
   navy: "from-brand-navy to-brand-navyDark",
 };
+
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 function StarIcon({ className = "" }: { className?: string }) {
   return (
@@ -50,7 +26,13 @@ function StarIcon({ className = "" }: { className?: string }) {
   );
 }
 
-export default function TestimonialsSection() {
+export default function TestimonialsSection({
+  reviews,
+  meta,
+}: {
+  reviews: GoogleReview[];
+  meta: GoogleReviewsMeta;
+}) {
   return (
     <section className="relative bg-brand-bg py-24 lg:py-32 px-6 overflow-hidden">
       <div
@@ -88,26 +70,34 @@ export default function TestimonialsSection() {
               </div>
               <div>
                 <p className="section-title text-2xl text-brand-navyDark font-semibold leading-none">
-                  4.9
+                  {meta.rating}
                   <span className="text-base text-brand-textLight font-normal">
                     /5
                   </span>
                 </p>
                 <p className="text-[12px] text-brand-textLight uppercase tracking-wider mt-1">
-                  Based on 200+ reviews
+                  Based on {meta.reviewCount}+ Google reviews
                 </p>
               </div>
             </div>
           </Reveal>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {TESTIMONIALS.map((t, i) => {
-            const tint = TINTS[t.tint];
-            return (
-              <Reveal key={t.name} delay={i * 140}>
+        <div
+          className="group/marquee relative mt-16 -mx-6 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
+        >
+          <div
+            className="flex w-max gap-6 px-6 animate-marquee group-hover/marquee:[animation-play-state:paused]"
+            style={{ animationDuration: `${reviews.length * 12}s` }}
+          >
+            {[...reviews, ...reviews].map((t, i) => {
+              const tint = TINT_GRADIENTS[TINTS[i % TINTS.length]];
+              const initials = initialsOf(t.name);
+              return (
                 <figure
-                  className={`group relative h-full overflow-hidden bg-white rounded-3xl ring-1 ring-black/5 shadow-[0_2px_10px_rgba(13,35,64,0.04)] hover:shadow-[0_30px_60px_-20px_rgba(13,35,64,0.25)] hover:-translate-y-2 transition-all duration-500 p-8 flex flex-col`}
+                  key={`${t.name}-${i}`}
+                  aria-hidden={i >= reviews.length}
+                  className="group relative w-[340px] sm:w-[380px] shrink-0 overflow-hidden bg-white rounded-3xl ring-1 ring-black/5 shadow-[0_2px_10px_rgba(13,35,64,0.04)] hover:shadow-[0_30px_60px_-20px_rgba(13,35,64,0.25)] transition-shadow duration-500 p-8 flex flex-col"
                 >
                   {/* Top hover bar */}
                   <div
@@ -133,7 +123,7 @@ export default function TestimonialsSection() {
                     </div>
                   </div>
 
-                  <blockquote className="relative mt-5 text-brand-text text-[15px] leading-relaxed flex-1">
+                  <blockquote className="relative mt-5 text-brand-text text-[15px] leading-relaxed flex-1 line-clamp-6">
                     {t.quote}
                   </blockquote>
 
@@ -141,21 +131,21 @@ export default function TestimonialsSection() {
                     <span
                       className={`flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br ${tint} text-white text-sm font-semibold shadow-sm`}
                     >
-                      {t.initials}
+                      {initials}
                     </span>
                     <div>
                       <p className="font-semibold text-brand-navyDark">
                         {t.name}
                       </p>
                       <p className="text-[11px] uppercase tracking-[0.18em] text-brand-textLight mt-0.5">
-                        {t.location}
+                        {t.relativeTime ?? "Posted on Google"}
                       </p>
                     </div>
                   </figcaption>
                 </figure>
-              </Reveal>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         <Reveal delay={300} className="mt-14 flex justify-center">

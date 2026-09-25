@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { withCMSMetadata } from "@/lib/cms/metadata";
-import Script from "next/script";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
 import Reveal from "@/components/Reveal";
 import BookTrigger from "@/components/booking/BookTrigger";
+import { getDisplayedGoogleReviews } from "@/lib/google-reviews";
+import { isFiveStarReview } from "@/lib/reviews";
 
 const CANONICAL = "https://synergyspineandnerve.com/testimonials/";
 
@@ -25,26 +26,13 @@ const cmsFallbackMetadata: Metadata = {
   },
 };
 
-const GOOGLE_REVIEWS_URL =
-  "https://www.google.com/search?q=Synergy+Spine+and+Nerve+Center+Reviews";
-
-// Elfsight Google Reviews widget id (managed at elfsight.com).
-const ELFSIGHT_APP_ID = "377d8f4a-02dd-4071-bf0a-8368c1fb8fd8";
-const ELFSIGHT_SCRIPT_SRC = "https://elfsightcdn.com/platform.js";
-
-const SCHEMA = {
-  "@context": "https://schema.org",
-  "@type": "Chiropractic",
-  name: "Synergy Spine and Nerve Center",
-  url: CANONICAL,
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    reviewCount: 89,
-    bestRating: "5",
-    worstRating: "1",
-  },
-};
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -99,7 +87,34 @@ export async function generateMetadata(): Promise<Metadata> {
   return withCMSMetadata("/testimonials", cmsFallbackMetadata);
 }
 
-export default function TestimonialsPage() {
+export default async function TestimonialsPage() {
+  const { reviews, meta } = await getDisplayedGoogleReviews();
+  const visibleReviews = reviews.filter(isFiveStarReview);
+
+  const SCHEMA = {
+    "@context": "https://schema.org",
+    "@type": "Chiropractic",
+    name: "Synergy Spine and Nerve Center",
+    url: CANONICAL,
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: String(meta.rating),
+      reviewCount: meta.reviewCount,
+      bestRating: "5",
+      worstRating: "1",
+    },
+    ...(visibleReviews.length > 0
+      ? {
+          review: visibleReviews.map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.name },
+            reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
+            reviewBody: r.quote,
+          })),
+        }
+      : {}),
+  };
+
   return (
     <>
       <Header />
@@ -211,7 +226,7 @@ export default function TestimonialsPage() {
                         </p>
                       </div>
                       <p className="mt-5 text-6xl md:text-7xl font-bold leading-none text-brand-navyDark">
-                        4.9
+                        {meta.rating}
                       </p>
                       <div className="mt-3">
                         <Stars rating={5} />
@@ -221,12 +236,12 @@ export default function TestimonialsPage() {
                         Rancho and the greater Albuquerque area.
                       </p>
                       <a
-                        href={GOOGLE_REVIEWS_URL}
+                        href={meta.reviewsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand-blue hover:text-brand-navyDark transition"
                       >
-                        View all reviews on Google
+                        View all {meta.reviewCount} reviews on Google
                         <span aria-hidden="true">↗</span>
                       </a>
                     </div>
@@ -251,7 +266,7 @@ export default function TestimonialsPage() {
           </div>
         </section>
 
-        {/* REVIEWS - Elfsight Google Reviews widget */}
+        {/* REVIEWS - live 5-star Google reviews via Places API */}
         <section id="reviews" className="bg-brand-bg py-16 lg:py-20">
           <div className="mx-auto max-w-6xl px-6">
             <Reveal>
@@ -277,11 +292,47 @@ export default function TestimonialsPage() {
               </div>
             </Reveal>
 
-            <Reveal delay={120}>
-              <div
-                className={`elfsight-app-${ELFSIGHT_APP_ID} mt-10`}
-                data-elfsight-app-lazy
-              />
+            {visibleReviews.length > 0 ? (
+              <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {visibleReviews.map((r, i) => (
+                  <Reveal key={r.name} delay={i * 120}>
+                    <figure className="h-full bg-white rounded-3xl ring-1 ring-black/5 shadow-[0_2px_10px_rgba(13,35,64,0.04)] p-8 flex flex-col">
+                      <div className="flex items-center justify-between">
+                        <Stars rating={5} />
+                        <GoogleGIcon className="h-5 w-5" />
+                      </div>
+                      <blockquote className="mt-5 text-brand-text text-[15px] leading-relaxed flex-1 line-clamp-6">
+                        {r.quote}
+                      </blockquote>
+                      <figcaption className="mt-8 pt-6 border-t border-black/5 flex items-center gap-3">
+                        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-brand-blue to-brand-blueLight text-white text-sm font-semibold shadow-sm">
+                          {initialsOf(r.name)}
+                        </span>
+                        <div>
+                          <p className="font-semibold text-brand-navyDark">
+                            {r.name}
+                          </p>
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-brand-textLight mt-0.5">
+                            {r.relativeTime ?? "Posted on Google"}
+                          </p>
+                        </div>
+                      </figcaption>
+                    </figure>
+                  </Reveal>
+                ))}
+              </div>
+            ) : null}
+
+            <Reveal delay={visibleReviews.length * 120} className="mt-10 flex justify-center">
+              <a
+                href={meta.reviewsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-brand-blue hover:text-brand-navyDark transition"
+              >
+                View all Google reviews
+                <span aria-hidden="true">↗</span>
+              </a>
             </Reveal>
           </div>
         </section>
@@ -293,7 +344,7 @@ export default function TestimonialsPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                 <div>
                   <p className="text-4xl md:text-5xl font-semibold text-brand-navyDark">
-                    4.9<span className="text-brand-blue">★</span>
+                    {meta.rating}<span className="text-brand-blue">★</span>
                   </p>
                   <p className="mt-1 text-[11px] uppercase tracking-[0.22em] font-bold text-brand-textLight">
                     Average rating
@@ -384,12 +435,6 @@ export default function TestimonialsPage() {
       </main>
 
       <Footer />
-
-      <Script
-        src={ELFSIGHT_SCRIPT_SRC}
-        strategy="afterInteractive"
-        async
-      />
 
       <script
         type="application/ld+json"
