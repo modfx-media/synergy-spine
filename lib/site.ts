@@ -1,3 +1,5 @@
+import type { GoogleReview, GoogleReviewsMeta } from "@/lib/reviews";
+
 // Central production site origin and NAP. Import instead of hardcoding.
 export const SITE_ORIGIN =
   process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "https://synergyspineandnerve.com";
@@ -39,7 +41,11 @@ export const AREA_SERVED_CITIES = [
   "Cedar Crest",
 ];
 
-export function organizationSchema(pageUrl = `${SITE_ORIGIN}/`) {
+export function organizationSchema(
+  pageUrl = `${SITE_ORIGIN}/`,
+  liveReviews?: { reviews: GoogleReview[]; meta: GoogleReviewsMeta },
+) {
+  const fiveStar = liveReviews?.reviews.filter((r) => r.rating === 5) ?? [];
   return {
     "@context": "https://schema.org",
     "@type": ["Chiropractic", "MedicalClinic", "LocalBusiness"],
@@ -80,10 +86,20 @@ export function organizationSchema(pageUrl = `${SITE_ORIGIN}/`) {
     })),
     aggregateRating: {
       "@type": "AggregateRating",
-      ratingValue: "4.9",
+      ratingValue: String(liveReviews?.meta.rating ?? 4.9),
       bestRating: "5",
-      ratingCount: "89",
+      ratingCount: String(liveReviews?.meta.reviewCount ?? 89),
     },
+    ...(fiveStar.length > 0
+      ? {
+          review: fiveStar.map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.name },
+            reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
+            reviewBody: r.quote,
+          })),
+        }
+      : {}),
     sameAs: SAME_AS,
     mainEntityOfPage: pageUrl,
   };

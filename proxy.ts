@@ -22,17 +22,16 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (isPublicPage(pathname) && pathname !== "/" && !pathname.endsWith("/")) {
-    const url = request.nextUrl.clone()
-    url.pathname = `${pathname}/`
-    return NextResponse.redirect(url, 308)
+    // request.nextUrl.clone() re-normalizes the pathname on serialize, silently
+    // dropping the appended slash — build a plain URL instead.
+    return NextResponse.redirect(new URL(`${pathname}/`, request.url), 308)
   }
 
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set("x-pathname", normalizePath(pathname))
 
   if (isPayloadPath(pathname) && !pathname.endsWith("/") && !pathname.includes(".")) {
-    const url = request.nextUrl.clone()
-    url.pathname = `${pathname}/`
+    const url = new URL(`${pathname}/`, request.url)
     return NextResponse.rewrite(url, { request: { headers: requestHeaders } })
   }
 
