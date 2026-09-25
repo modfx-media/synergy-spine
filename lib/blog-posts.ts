@@ -56,10 +56,10 @@ export const POSTS: BlogPost[] = [
     isoDate: "2026-09-22",
     readTime: "7 min read",
     featureImage:
-      "/blog-images/walk-rio-rancho-trails-with-sciatica-safe-tips.jpg",
+      "/blog-images/walk-rio-rancho-trails-with-sciatica-safe-tips.png",
     h1: "Walk Rio Rancho with Less Sciatic Nerve Pain",
     coverAlt:
-      "Woman resting on a rock along a desert trail, holding her hip after sciatic pain",
+      "Woman paused on a desert trail holding her hip where sciatic pain is highlighted",
   },
   {
     slug: "chronic-neck-pain-relief-with-medical-massage",
