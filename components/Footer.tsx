@@ -131,6 +131,14 @@ export default function Footer() {
               <Link href="/sitemap/" className="hover:text-brand-blue transition-colors">
                 Sitemap
               </Link>
+              <a
+                href="https://modfxmedia.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-brand-blue transition-colors"
+              >
+                POWERED BY MODFXMEDIA
+              </a>
             </div>
           </div>
         </div>
