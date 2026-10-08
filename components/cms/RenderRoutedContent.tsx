@@ -1,10 +1,11 @@
-import { RichText } from "@payloadcms/richtext-lexical/react"
 import type { SerializedEditorState } from "@payloadcms/richtext-lexical/lexical"
 
 import AnnouncementBar from "@/components/home/AnnouncementBar"
 import Breadcrumb from "@/components/Breadcrumb"
+import { CmsRichText } from "@/components/cms/CmsRichText"
 import Footer from "@/components/Footer"
 import Header from "@/components/Header"
+import { mediaPublicURL } from "@/lib/cms/blog-index"
 import { normalizePath } from "@/lib/cms/paths"
 import type { RoutedContent } from "@/lib/cms/queries"
 
@@ -21,6 +22,16 @@ export function RenderRoutedContent({ doc }: { doc: RoutedContent["doc"] }) {
   const path = typeof doc.path === "string" ? normalizePath(doc.path) : "/"
   const title = doc.heroHeading || doc.title || "Synergy Spine and Nerve Center"
   const faqs = (doc.faqs ?? []).filter((item) => item?.question && item?.answer)
+  const metaImage = doc.meta && "image" in doc.meta ? mediaPublicURL(doc.meta.image) : null
+  const metaAlt =
+    doc.meta &&
+    "image" in doc.meta &&
+    doc.meta.image &&
+    typeof doc.meta.image === "object" &&
+    "alt" in doc.meta.image &&
+    typeof doc.meta.image.alt === "string"
+      ? doc.meta.image.alt
+      : title
 
   return (
     <>
@@ -36,10 +47,15 @@ export function RenderRoutedContent({ doc }: { doc: RoutedContent["doc"] }) {
             {doc.excerpt ? (
               <p className="mt-6 text-lg leading-relaxed text-brand-textLight">{doc.excerpt}</p>
             ) : null}
+            {metaImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={metaImage} alt={metaAlt} className="mt-10 w-full rounded-2xl shadow-md" />
+            ) : null}
             {isEditorState(doc.content) ? (
-              <div className="prose prose-lg mt-10 max-w-none prose-headings:font-serif prose-headings:text-brand-navy prose-a:text-brand-blue">
-                <RichText data={doc.content} />
-              </div>
+              <CmsRichText
+                className="prose prose-lg mt-10 max-w-none prose-headings:font-serif prose-headings:text-brand-navy prose-a:text-brand-blue prose-img:rounded-xl prose-img:shadow-md"
+                data={doc.content}
+              />
             ) : null}
             {faqs.length ? (
               <section className="mt-14">

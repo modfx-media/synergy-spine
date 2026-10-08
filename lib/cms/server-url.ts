@@ -18,6 +18,11 @@ export function serverURL(): string {
     clean(process.env.NEXT_PUBLIC_SITE_URL) ||
     clean(process.env.NEXT_PUBLIC_SITE_ORIGIN)
 
+  // Preview admin uploads and live preview must hit this deployment, not production.
+  if (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+
   if (process.env.VERCEL) {
     if (configured && !isLocal(configured)) return configured
     if (site && !isLocal(site)) return site

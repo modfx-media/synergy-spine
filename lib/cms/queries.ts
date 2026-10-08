@@ -60,7 +60,7 @@ export async function queryRoutedContentByPath(
       draft,
       overrideAccess: draft,
       limit: 1,
-      depth: 0,
+      depth: 2,
       pagination: false,
     })
     const doc = result.docs[0]

@@ -14,6 +14,12 @@ export function publicPath(path: string): string {
   return normalized === "/" ? "/" : `${normalized}/`
 }
 
+/** `/blog/:slug` article routes. Pagination (`/blog/page/2`) is not an article. */
+export function isBlogArticlePath(path: string): boolean {
+  const parts = normalizePath(path).split("/").filter(Boolean)
+  return parts.length === 2 && parts[0] === "blog" && parts[1] !== "page"
+}
+
 export function previewFromPath(path: unknown): string | null {
   if (typeof path !== "string") return null
   const trimmed = path.trim()

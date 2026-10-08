@@ -12,8 +12,7 @@ import {
   getCategoryByslug,
   type BlogPost,
 } from "@/lib/blog-posts";
-import { getPublishedBlogPosts } from "@/lib/ranked/posts";
-import { toBlogPosts } from "@/lib/ranked/ui";
+import { getSiteBlogPosts } from "@/lib/cms/published-posts";
 import { withCMSMetadata } from "@/lib/cms/metadata";
 import { SITE_ORIGIN } from "@/lib/site";
 
@@ -59,7 +58,7 @@ export default async function CategoryPage({
   const category = getCategoryByslug(slug);
   if (!category) notFound();
 
-  const posts = toBlogPosts(await getPublishedBlogPosts()).filter(
+  const posts = (await getSiteBlogPosts()).filter(
     (p) => categorySlug(p.category) === slug,
   );
   const visible = posts;

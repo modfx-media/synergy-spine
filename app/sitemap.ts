@@ -3,8 +3,7 @@ import { CATEGORIES, categorySlug, POSTS } from "@/lib/blog-posts"
 import { CITIES } from "@/lib/programmatic/cities"
 import { SERVICES } from "@/lib/programmatic/services"
 import { CHIROPRACTIC_SERVICES, MASSAGE_SERVICES } from "@/lib/services-catalog"
-import { getPublishedBlogPosts } from "@/lib/ranked/posts"
-import { toBlogPosts } from "@/lib/ranked/ui"
+import { getSiteBlogPosts } from "@/lib/cms/published-posts"
 import { getPublishedSitemapMeta } from "@/lib/cms/sitemap"
 import { normalizePath, publicPath } from "@/lib/cms/paths"
 import { SITE_ORIGIN as BASE_URL } from "@/lib/site"
@@ -33,7 +32,7 @@ function buildEntries(paths: string[], priority: number, lastModified: Date): En
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date()
-  const published = toBlogPosts(await getPublishedBlogPosts().catch(() => []))
+  const published = await getSiteBlogPosts().catch(() => [])
   const listing = published.length ? published : POSTS
   const cms = await getPublishedSitemapMeta()
 
