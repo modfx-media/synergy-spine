@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { withCMSMetadata } from "@/lib/cms/metadata";
 import { BlogListing } from "@/components/BlogListing";
-import { getPublishedBlogPosts } from "@/lib/ranked/posts";
-import { toBlogPosts } from "@/lib/ranked/ui";
+import { getSiteBlogPosts } from "@/lib/cms/published-posts";
 import { SITE_ORIGIN } from "@/lib/site";
 
 export const revalidate = 3600;
@@ -26,6 +25,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BlogIndexPage() {
-  const posts = toBlogPosts(await getPublishedBlogPosts());
+  const posts = await getSiteBlogPosts();
   return <BlogListing page={1} posts={posts} />;
 }

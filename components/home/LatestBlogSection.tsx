@@ -1,11 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
-import { getPublishedBlogPosts } from "@/lib/ranked/posts";
-import { toBlogPosts } from "@/lib/ranked/ui";
+import { getSiteBlogPosts } from "@/lib/cms/published-posts";
 
 export default async function LatestBlogSection() {
-  const featured = toBlogPosts(await getPublishedBlogPosts()).slice(0, 3);
+  const featured = (await getSiteBlogPosts()).slice(0, 3);
 
   return (
     <section className="relative bg-brand-bg py-24 lg:py-32 overflow-hidden">

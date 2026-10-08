@@ -1,30 +1,36 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
 import Reveal from "@/components/Reveal";
 import RankedArticleBody from "@/components/RankedArticleBody";
+import { CmsRichText } from "@/components/cms/CmsRichText";
 import {
   BLOG_AUTHOR,
   categorySlug,
+  type BlogPost,
 } from "@/lib/blog-posts";
 import { getPostContent } from "@/lib/blog-content";
-import { getPublishedBlogPost, getPublishedBlogPosts, getPublishedBlogSlugs } from "@/lib/ranked/posts";
-import { relatedFromPosts, toBlogPost, toBlogPosts } from "@/lib/ranked/ui";
+import { getPublishedBlogPost } from "@/lib/ranked/posts";
+import { relatedFromPosts, toBlogPost } from "@/lib/ranked/ui";
 
 import BookTrigger from "@/components/booking/BookTrigger";
 import { withCMSMetadata } from "@/lib/cms/metadata";
+import { getCMSBlogPost, getSiteBlogPosts } from "@/lib/cms/published-posts";
+import { cmsConfigured } from "@/lib/cms/queries";
+import { withCMS } from "@/lib/cms/safe";
 import { SITE_ORIGIN } from "@/lib/site";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  const slugs = await getPublishedBlogSlugs().catch(() => []);
-  return slugs.map((slug) => ({ slug }));
+  const posts = await getSiteBlogPosts().catch(() => []);
+  return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({
@@ -33,13 +39,15 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const data = await getPublishedBlogPost(slug);
-  if (!data) {
+  const draft = cmsConfigured() ? (await draftMode()).isEnabled : false;
+  const cms = await withCMS(() => getCMSBlogPost(slug, draft), null);
+  const data = cms ? null : await getPublishedBlogPost(slug);
+  if (!cms && !data) {
     return withCMSMetadata(`/blog/${slug}`, {
       title: "Post not found | Synergy Spine & Nerve Center",
     });
   }
-  const post = toBlogPost(data);
+  const post = cms ?? toBlogPost(data!);
   const url = `${SITE_ORIGIN}/blog/${post.slug}/`;
   const ogImage = post.featureImage
     ? post.featureImage.startsWith("http")
@@ -70,14 +78,18 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const data = await getPublishedBlogPost(slug);
-  if (!data) notFound();
+  const draft = cmsConfigured() ? (await draftMode()).isEnabled : false;
+  const cms = await withCMS(() => getCMSBlogPost(slug, draft), null);
+  const data = cms ? null : await getPublishedBlogPost(slug);
+  if (!cms && !data) notFound();
 
-  const post = toBlogPost(data);
+  const post: BlogPost = cms ?? toBlogPost(data!);
+  const author = cms?.author || BLOG_AUTHOR;
   const heading = post.h1 || post.title;
-  const allPosts = toBlogPosts(await getPublishedBlogPosts());
+  const allPosts = await getSiteBlogPosts();
   const related = relatedFromPosts(allPosts, slug, 3);
-  const localHtml = getPostContent(slug);
+  const localHtml = cms ? "" : getPostContent(slug);
+  const cmsContent = cms?.content;
   const url = `${SITE_ORIGIN}/blog/${post.slug}/`;
   const coverSrc = post.featureImage;
 
@@ -91,7 +103,7 @@ export default async function BlogPostPage({
       : undefined,
     author: {
       "@type": "Person",
-      name: BLOG_AUTHOR,
+      name: author,
       affiliation: "Synergy Spine and Nerve Center",
     },
     publisher: {
@@ -152,7 +164,7 @@ export default async function BlogPostPage({
                 <span className="h-1 w-1 rounded-full bg-white/40" />
                 <span>{post.readTime}</span>
                 <span className="h-1 w-1 rounded-full bg-white/40" />
-                <span>By {BLOG_AUTHOR}</span>
+                <span>By {author}</span>
               </div>
             </div>
           </div>
@@ -182,7 +194,12 @@ export default async function BlogPostPage({
             {/* Article — not wrapped in Reveal: tall posts stayed opacity-0 forever */}
             <article>
               <div className="rounded-2xl bg-white p-8 lg:p-12 ring-1 ring-black/5 shadow-sm">
-                {localHtml ? (
+                {cmsContent ? (
+                  <CmsRichText
+                    data={cmsContent}
+                    className="prose prose-lg max-w-3xl prose-headings:font-serif prose-headings:text-brand-navyDark prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-brand-text prose-p:leading-relaxed prose-a:text-brand-blue prose-a:no-underline hover:prose-a:underline prose-strong:text-brand-navyDark prose-li:text-brand-text prose-img:rounded-xl prose-img:shadow-md"
+                  />
+                ) : localHtml ? (
                   <div
                     className="prose prose-lg max-w-3xl prose-headings:font-serif prose-headings:text-brand-navyDark prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-brand-text prose-p:leading-relaxed prose-a:text-brand-blue prose-a:no-underline hover:prose-a:underline prose-strong:text-brand-navyDark prose-li:text-brand-text prose-img:rounded-xl prose-img:shadow-md"
                     dangerouslySetInnerHTML={{ __html: localHtml }}
@@ -218,7 +235,7 @@ export default async function BlogPostPage({
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-brand-navyDark">
-                        {BLOG_AUTHOR}
+                        {author}
                       </h3>
                       <p className="text-sm text-brand-textLight">
                         Synergy Spine and Nerve Center · Rio Rancho, NM

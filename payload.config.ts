@@ -91,7 +91,11 @@ export default buildConfig({
         return docPath === "/" ? `${origin}/` : `${origin}${docPath}/`
       },
       fields: ({ defaultFields }) => [
-        ...defaultFields,
+        ...defaultFields.map((field) =>
+          "name" in field && field.name === "image"
+            ? { ...field, label: "Featured image" }
+            : field,
+        ),
         { name: "canonicalUrl", type: "text" },
         {
           name: "noIndex",
@@ -111,10 +115,15 @@ export default buildConfig({
       ],
     }),
     vercelBlobStorage({
-      collections: {
-        media: true,
-      },
+      enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
       token: process.env.BLOB_READ_WRITE_TOKEN,
+      clientUploads: true,
+      collections: {
+        // Public blob URLs. Payload's adapter only supports public stores.
+        media: {
+          disablePayloadAccessControl: true,
+        },
+      },
     }),
   ],
 })

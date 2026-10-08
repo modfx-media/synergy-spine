@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogListing, POSTS_PER_PAGE } from "@/components/BlogListing";
-import { getPublishedBlogPosts } from "@/lib/ranked/posts";
-import { toBlogPosts } from "@/lib/ranked/ui";
+import { getSiteBlogPosts } from "@/lib/cms/published-posts";
 import { withCMSMetadata } from "@/lib/cms/metadata";
 import { SITE_ORIGIN } from "@/lib/site";
 
@@ -10,7 +9,7 @@ export const revalidate = 3600;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  const posts = toBlogPosts(await getPublishedBlogPosts().catch(() => []));
+  const posts = await getSiteBlogPosts().catch(() => []);
   const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
   const params: { n: string }[] = [];
   for (let i = 2; i <= totalPages; i++) {
@@ -53,7 +52,7 @@ export default async function BlogPaginatedPage({
 }) {
   const { n } = await params;
   const page = Number.parseInt(n, 10);
-  const posts = toBlogPosts(await getPublishedBlogPosts());
+  const posts = await getSiteBlogPosts();
   const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
   if (!Number.isFinite(page) || page < 2 || page > totalPages) {
     notFound();
