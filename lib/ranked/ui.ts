@@ -40,7 +40,7 @@ export function toBlogPost(post: BlogPostData): BlogPost {
       h1: local.h1 || post.h1,
       isoDate: post.publishDate.slice(0, 10),
       date: formatBlogDate(post.publishDate),
-      featureImage: post.coverImage || local.featureImage,
+      featureImage: local.featureImage || post.coverImage,
       coverAlt: local.coverAlt || post.coverAlt,
       source: 'local',
     }

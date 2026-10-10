@@ -1,6 +1,8 @@
 import type { BlogCategory, BlogPost } from "@/lib/blog-posts"
 import { CATEGORIES } from "@/lib/blog-posts"
 import { normalizePath } from "@/lib/cms/paths"
+import { DEFAULT_COVER } from "@/lib/ranked/config"
+import { calendarDay } from "@/lib/ranked/html-to-post"
 import { formatBlogDate, inferCategory } from "@/lib/ranked/ui"
 
 export type CmsPostSource = {
@@ -36,24 +38,39 @@ type LexicalNode = {
   root?: unknown
 }
 
-/** Public media URL. Local `/media/...` files 404 on Vercel, so they are dropped. */
-export function mediaPublicURL(value: unknown): string | null {
-  const raw =
-    typeof value === "string"
-      ? value
-      : value && typeof value === "object" && "url" in value && typeof value.url === "string"
-        ? value.url
-        : ""
-  const url = raw.trim()
-  if (!url || url.startsWith("/media/") || url.startsWith("media/")) return null
-  if (url.startsWith("/")) return url
+function isLocalMediaPath(url: string): boolean {
+  return (
+    url.startsWith("/media/") ||
+    url.startsWith("media/") ||
+    url.includes("/api/media/file/")
+  )
+}
+
+/** Absolute or site-public file URL. Unresolved `/media` paths are not renderable by next/image. */
+function isRenderableFileURL(url: string): boolean {
+  if (!url || isLocalMediaPath(url)) return false
+  if (url.startsWith("/")) return true
   try {
     const parsed = new URL(url)
-    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null
-    return url
+    return parsed.protocol === "https:" || parsed.protocol === "http:"
   } catch {
-    return null
+    return false
   }
+}
+
+/** Public media URL. Prefers a blob/https URL over a local `/media` path on the same record. */
+export function mediaPublicURL(value: unknown): string | null {
+  if (typeof value === "string") {
+    const url = value.trim()
+    return isRenderableFileURL(url) ? url : null
+  }
+  if (!value || typeof value !== "object") return null
+  const record = value as { url?: unknown; thumbnailURL?: unknown }
+  const url = typeof record.url === "string" ? record.url.trim() : ""
+  const thumb = typeof record.thumbnailURL === "string" ? record.thumbnailURL.trim() : ""
+  if (isRenderableFileURL(url)) return url
+  if (isRenderableFileURL(thumb)) return thumb
+  return null
 }
 
 export function blogSlugFromDoc(doc: { slug?: string | null; path?: string | null }): string | null {
@@ -104,10 +121,9 @@ function categoryFrom(raw: string | null | undefined, title: string, slug: strin
 }
 
 function isoDay(doc: CmsPostSource): string {
-  const raw = doc.publishedAt || doc.updatedAt || doc.createdAt || ""
-  const date = new Date(raw)
-  if (Number.isNaN(date.getTime())) return "1970-01-01"
-  return date.toISOString().slice(0, 10)
+  const published = typeof doc.publishedAt === "string" ? doc.publishedAt.trim() : ""
+  if (published) return calendarDay(published) ?? "1970-01-01"
+  return calendarDay(doc.updatedAt || doc.createdAt || "") ?? "1970-01-01"
 }
 
 function firstInlineImage(content: unknown): { url: string; alt: string } | null {
@@ -161,10 +177,25 @@ export function cmsArticleFromDoc(doc: CmsPostSource): CmsArticle | null {
   }
 }
 
-/** Hardcoded and Ranked cards stay. Published CMS posts fill in missing slugs. */
+function ownImage(url: string | null | undefined): string | null {
+  if (!url || url === DEFAULT_COVER) return null
+  return url
+}
+
+/** One card per slug. A real image from either source is kept; dates are not rewritten. */
 export function mergeBlogPosts(fallback: BlogPost[], cmsPosts: BlogPost[]): BlogPost[] {
-  const seen = new Set(fallback.map((post) => post.slug))
-  const merged = [...fallback]
+  const cmsBySlug = new Map<string, BlogPost>()
+  for (const post of cmsPosts) {
+    if (post.slug) cmsBySlug.set(post.slug, post)
+  }
+  const seen = new Set<string>()
+  const merged: BlogPost[] = []
+  for (const post of fallback) {
+    if (!post.slug || seen.has(post.slug)) continue
+    seen.add(post.slug)
+    const image = ownImage(post.featureImage) || ownImage(cmsBySlug.get(post.slug)?.featureImage)
+    merged.push(image && image !== post.featureImage ? { ...post, featureImage: image } : post)
+  }
   for (const post of cmsPosts) {
     if (!post.slug || seen.has(post.slug)) continue
     seen.add(post.slug)
