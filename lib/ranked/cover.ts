@@ -1,5 +1,5 @@
 import { BlobNotFoundError, head, put } from '@vercel/blob'
-import { COMMITTED_COVER_BY_SLUG, COMMITTED_COVER_SLUGS, coverPrompt } from './config'
+import { COMMITTED_COVER_BY_SLUG, COMMITTED_COVER_SLUGS, coverPrompt, DEFAULT_COVER } from './config'
 
 type CoverTheme = {
   keys: string[]
@@ -296,9 +296,18 @@ export async function getRankedCoverImage(input: {
 export function ensureUniqueCoverImages<T extends { slug: string; coverImage: string }>(posts: T[]): T[] {
   const used = new Set<string>()
   return posts.map((post) => {
-    let cover = post.coverImage
-    if (!cover || used.has(cover)) cover = uniqueWebCoverUrl(post.slug, used, post.slug)
-    used.add(cover)
-    return cover === post.coverImage ? post : { ...post, coverImage: cover }
+    const cover = post.coverImage
+    // A real file stays on that post, even when another card uses the same URL.
+    if (cover && cover !== DEFAULT_COVER) {
+      used.add(cover)
+      return post
+    }
+    if (cover && !used.has(cover)) {
+      used.add(cover)
+      return post
+    }
+    const next = uniqueWebCoverUrl(post.slug, used, post.slug)
+    used.add(next)
+    return next === cover ? post : { ...post, coverImage: next }
   })
 }

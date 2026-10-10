@@ -148,6 +148,33 @@ export function isBlogContentType(contentType: string | null): boolean {
   return type.includes('blog')
 }
 
+/** Rio Rancho. Calendar days are compared here so UTC midnight does not move the date. */
+export const CLINIC_TIME_ZONE = 'America/Denver'
+
+/**
+ * Calendar day for a publish timestamp.
+ * Date-only values and Payload's noon/midnight UTC dates stay on that day.
+ * Other instants use the clinic's calendar day.
+ */
+export function calendarDay(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const value = raw.trim()
+  if (!value) return null
+  const stable = value.match(/^(\d{4}-\d{2}-\d{2})(?:$|T(?:00|12):00:00(?:\.\d+)?Z$)/)
+  if (stable) return stable[1]
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleDateString('en-CA', { timeZone: CLINIC_TIME_ZONE })
+}
+
+/** True once the publish calendar day has arrived in Rio Rancho. */
+export function isLivePublishDay(raw: string | null | undefined, now = new Date()): boolean {
+  const day = calendarDay(raw)
+  if (!day) return false
+  const today = now.toLocaleDateString('en-CA', { timeZone: CLINIC_TIME_ZONE })
+  return day <= today
+}
+
 export function isRankedPostLive(
   status: string,
   scheduledDate: string | null = null,
@@ -156,14 +183,13 @@ export function isRankedPostLive(
   const s = status.trim().toLowerCase()
   if (s === 'revising' || s === 'cancelled' || s === 'canceled') return false
   if (!scheduledDate) return true
-  const day = scheduledDate.slice(0, 10)
-  const today = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
-  return day <= today
+  return isLivePublishDay(scheduledDate, now)
 }
 
 export function publishDateFromRanked(scheduledDate: string | null, fallback: string): string {
-  if (scheduledDate) return scheduledDate.slice(0, 10)
-  return fallback.slice(0, 10)
+  const scheduled = scheduledDate ? calendarDay(scheduledDate) : null
+  if (scheduled) return scheduled
+  return calendarDay(fallback) ?? fallback.slice(0, 10)
 }
 
 export function todayInNewYork(now = new Date()): string {
@@ -181,7 +207,7 @@ export function nextUniquePublishDate(
   occupied: Set<string>,
   today = todayInNewYork(),
 ): string {
-  let date = preferred.slice(0, 10)
+  const date = preferred.slice(0, 10)
   if (!occupied.has(date)) return date
 
   let forward = date
@@ -195,23 +221,13 @@ export function nextUniquePublishDate(
   return back
 }
 
-/** No two posts share a publishDate. Keep original dates when they are free. */
+/** Keep each post's real publish day. Do not move a date onto another day. */
 export function ensureUniquePublishDates<T extends { slug: string; publishDate: string }>(
   posts: T[],
-  today = todayInNewYork(),
 ): T[] {
-  const occupied = new Set<string>()
-  const sorted = [...posts].sort(
-    (a, b) => a.publishDate.localeCompare(b.publishDate) || a.slug.localeCompare(b.slug),
-  )
-  const remapped = new Map<string, string>()
-  for (const post of sorted) {
-    const unique = nextUniquePublishDate(post.publishDate, occupied, today)
-    occupied.add(unique)
-    remapped.set(post.slug, unique)
-  }
   return posts.map((post) => {
-    const date = remapped.get(post.slug)
-    return date && date !== post.publishDate ? { ...post, publishDate: date } : post
+    const day = calendarDay(post.publishDate)
+    if (!day || day === post.publishDate) return post
+    return { ...post, publishDate: day }
   })
 }

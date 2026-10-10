@@ -5,6 +5,7 @@ import {
   ensureUniquePublishDates,
   htmlToBlogPost,
   isBlogContentType,
+  isLivePublishDay,
   isRankedPostLive,
   publishDateFromRanked,
   slugFromTitle,
@@ -159,7 +160,9 @@ export async function getPublishedBlogPost(slug: string): Promise<BlogPostData |
   const ranked = await getLiveRankedBlogPosts(undefined, { generateForSlug: slug })
   const taken = new Set(local.map((p) => p.slug))
   const merged = [...local, ...ranked.filter((p) => !taken.has(p.slug))]
-  return ensureUniquePublishDates(ensureUniqueCoverImages(merged)).find((p) => p.slug === slug)
+  const post = ensureUniquePublishDates(ensureUniqueCoverImages(merged)).find((p) => p.slug === slug)
+  if (!post || !isLivePublishDay(post.publishDate)) return undefined
+  return post
 }
 
 export async function getPublishedBlogPosts(): Promise<BlogPostData[]> {
@@ -167,7 +170,9 @@ export async function getPublishedBlogPosts(): Promise<BlogPostData[]> {
   const ranked = await getLiveRankedBlogPosts()
   const taken = new Set(local.map((p) => p.slug))
   const merged = [...local, ...ranked.filter((p) => !taken.has(p.slug))]
-  return ensureUniquePublishDates(ensureUniqueCoverImages(merged))
+  return ensureUniquePublishDates(ensureUniqueCoverImages(merged)).filter((post) =>
+    isLivePublishDay(post.publishDate),
+  )
 }
 
 export async function getPublishedBlogSlugs(): Promise<string[]> {
