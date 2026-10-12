@@ -7,6 +7,8 @@ import Breadcrumb from "@/components/Breadcrumb";
 import Reveal from "@/components/Reveal";
 
 import BookTrigger from "@/components/booking/BookTrigger";
+
+export const revalidate = 300;
 const CANONICAL =
   "https://synergyspineandnerve.com/resources/all-about-nutrition/";
 

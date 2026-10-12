@@ -25,7 +25,7 @@ import { cmsConfigured } from "@/lib/cms/queries";
 import { withCMS } from "@/lib/cms/safe";
 import { SITE_ORIGIN } from "@/lib/site";
 
-export const revalidate = 3600;
+export const revalidate = 300;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

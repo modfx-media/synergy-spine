@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
 import Reveal from "@/components/Reveal";
 
+
+export const revalidate = 300;
 const CANONICAL = "https://synergyspineandnerve.com/sitemap/";
 
 const cmsFallbackMetadata: Metadata = {
