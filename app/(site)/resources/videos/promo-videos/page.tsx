@@ -8,6 +8,8 @@ import Reveal from "@/components/Reveal";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 
 import BookTrigger from "@/components/booking/BookTrigger";
+
+export const revalidate = 300;
 const SLUG = "promo-videos";
 const CANONICAL = `https://synergyspineandnerve.com/resources/videos/${SLUG}/`;
 

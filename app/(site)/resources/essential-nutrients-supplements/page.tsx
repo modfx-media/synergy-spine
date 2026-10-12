@@ -9,6 +9,8 @@ import Reveal from "@/components/Reveal";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 
 import BookTrigger from "@/components/booking/BookTrigger";
+
+export const revalidate = 300;
 const CANONICAL =
   "https://synergyspineandnerve.com/resources/essential-nutrients-supplements/";
 const HERO_IMAGE = "/resources/essential-nutrients.jpg";

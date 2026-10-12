@@ -17,6 +17,8 @@ import {
   WEEKLY_PATHS,
 } from "@/lib/seo/public-paths"
 
+
+export const revalidate = 300;
 const POSTS_PER_PAGE = 12
 
 type Entry = MetadataRoute.Sitemap[number]

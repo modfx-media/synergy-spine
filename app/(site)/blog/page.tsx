@@ -4,7 +4,7 @@ import { BlogListing } from "@/components/BlogListing";
 import { getSiteBlogPosts } from "@/lib/cms/published-posts";
 import { SITE_ORIGIN } from "@/lib/site";
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 const cmsFallbackMetadata: Metadata = {
   title: "Chiropractic Health Blog | Synergy Spine & Nerve Center",

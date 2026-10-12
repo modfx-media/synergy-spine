@@ -9,6 +9,8 @@ import Reveal from "@/components/Reveal";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 
 import BookTrigger from "@/components/booking/BookTrigger";
+
+export const revalidate = 300;
 const HERO_IMAGE = "/resources/spinal-health-assessment.jpeg";
 const CANONICAL =
   "https://synergyspineandnerve.com/resources/improve-your-sha-score/";
