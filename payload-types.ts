@@ -170,6 +170,7 @@ export interface User {
 export interface Media {
   id: number;
   alt?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -494,6 +495,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -674,7 +676,7 @@ export interface Header {
           | {
               label?: string | null;
               href?: string | null;
-              children?:
+              items?:
                 | {
                     label?: string | null;
                     href?: string | null;
@@ -764,7 +766,7 @@ export interface HeaderSelect<T extends boolean = true> {
           | {
               label?: T;
               href?: T;
-              children?:
+              items?:
                 | T
                 | {
                     label?: T;

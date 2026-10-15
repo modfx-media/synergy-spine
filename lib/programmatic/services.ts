@@ -403,7 +403,7 @@ export const SERVICES: ServiceCopy[] = [
     titleTemplate:
       "Softwave Therapy in {city}, NM | Synergy Spine and Nerve Center",
     descriptionTemplate:
-      "Softwave shockwave therapy for {city}, NM patients with chronic joint pain, plantar fasciitis, and tendon injuries. Call (505) 891-2280.",
+      "Softwave therapy for {city}, NM patients with chronic joint pain, plantar fasciitis, and tendon injuries. Call (505) 891-2280.",
     h1Template: "Softwave Therapy in {city}, NM",
     whatItIs:
       "Softwave is a focused acoustic-wave technology that triggers the body's own repair process. Unlike laser, ultrasound, or steroid injections, Softwave activates resident stem cells and restarts healing in tissues the body had given up on. It's non-invasive, drug-free, and supported by a growing body of clinical evidence.",
@@ -431,8 +431,8 @@ export const SERVICES: ServiceCopy[] = [
     ],
     faqs: [
       {
-        q: "How is Softwave different from other shockwave devices?",
-        a: "Softwave uses a broader, lower-intensity wave that activates stem cells without the discomfort of older focused-shockwave devices. It's the same underlying technology used in elite sports medicine and orthopedic practices.",
+        q: "How is Softwave different from other acoustic-wave devices?",
+        a: "Softwave uses a broader, lower-intensity wave that activates stem cells without the discomfort of older focused devices. It's the same underlying technology used in elite sports medicine and orthopedic practices.",
       },
       {
         q: "Will I need a series or just one session?",
