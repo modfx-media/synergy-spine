@@ -15,6 +15,7 @@ import { Footer, Header, SiteSettings } from "@/globals"
 import { allowedOrigins, serverURL } from "@/lib/cms/server-url"
 
 import { scheduledPublishPlugin } from "./scheduled-publish";
+import { blobUniqueClientUploads } from "./lib/cms/blob-unique-upload";
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -127,5 +128,6 @@ export default buildConfig({
         },
       },
     }),
+    blobUniqueClientUploads(),
   ],
 })
