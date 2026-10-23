@@ -47,6 +47,62 @@ export function categorySlug(c: BlogCategory): string {
 
 export const POSTS: BlogPost[] = [
   {
+    slug: "stop-daily-triggers-with-a-migraine-specialist-nearby",
+    title: "Stop Daily Triggers With a Migraine Specialist Nearby",
+    excerpt:
+      "Learn simple habit changes and care options a migraine doctor in Rio Rancho can use to reduce triggers, ease pain, and improve daily comfort",
+    category: "Chiropractic Care",
+    date: "October 20, 2026",
+    isoDate: "2026-10-20",
+    readTime: "6 min read",
+    featureImage:
+      "/blog-images/Stop Daily Triggers With a Migraine Specialist Nearby .webp",
+    h1: "Everyday Habits Quietly Fueling Your Migraines",
+    coverAlt: "Woman pressing her hand to her forehead with eyes closed from migraine pain",
+  },
+  {
+    slug: "weekend-hiking-relief-with-a-sciatica-doctor-nearby",
+    title: "Weekend Hiking Relief With a Sciatica Doctor Nearby",
+    excerpt:
+      "Get back to weekend hikes with a sciatica doctor in Rio Rancho. Evidence-based chiropractic care and therapy ease pain and restore function.",
+    category: "Chiropractic Care",
+    date: "October 13, 2026",
+    isoDate: "2026-10-13",
+    readTime: "6 min read",
+    featureImage:
+      "/blog-images/Weekend Hiking Relief With a Sciatica Doctor Nearby .jpg",
+    h1: "Rediscover Pain-Free Trails Around Rio Rancho",
+    coverAlt: "Hiker on a mountain trail holding his lower back",
+  },
+  {
+    slug: "set-up-your-car-to-reduce-neck-pain-in-rio-rancho",
+    title: "Set Up Your Car to Reduce Neck Pain in Rio Rancho",
+    excerpt:
+      "Learn simple driving posture tweaks plus tips from a neck pain chiropractor in Rio Rancho to adjust headrest, seat angle, mirrors, and reach for comfort",
+    category: "Chiropractic Care",
+    date: "October 6, 2026",
+    isoDate: "2026-10-06",
+    readTime: "7 min read",
+    featureImage:
+      "/blog-images/Set Up Your Car to Reduce Neck Pain in Rio Rancho .webp",
+    h1: "Drive With Less Neck Pain on Rio Rancho Roads",
+    coverAlt: "Woman in a car with a neck support pillow, hand resting on her neck",
+  },
+  {
+    slug: "delayed-neck-pain-after-car-accidents-in-rio-rancho",
+    title: "Delayed Neck Pain After Car Accidents in Rio Rancho",
+    excerpt:
+      "Learn why neck symptoms can appear days after a crash, key red flags, and when to request imaging from a car accident chiropractor in Rio Rancho",
+    category: "Chiropractic Treatment",
+    date: "September 29, 2026",
+    isoDate: "2026-09-29",
+    readTime: "8 min read",
+    featureImage:
+      "/blog-images/Delayed Neck Pain After Car Accidents in Rio Rancho  .jpeg",
+    h1: "Neck Pain After a Crash Is Not Always Immediate",
+    coverAlt: "Man holding his neck in pain in front of a damaged red car",
+  },
+  {
     slug: "walk-rio-rancho-trails-with-sciatica-safe-tips",
     title: "Walk Rio Rancho Trails With Sciatica Safe Tips",
     excerpt:
