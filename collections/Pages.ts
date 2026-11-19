@@ -1,7 +1,7 @@
 import type { CollectionConfig } from "payload"
 
 import { publishedOrLoggedIn } from "@/collections/access"
-import { nullableUniqueText, pathFromSlug } from "@/collections/hooks"
+import { nullableUniqueText, pathFromSlug, revalidateDeleted, revalidatePublished } from "@/collections/hooks"
 import { previewURL } from "@/lib/cms/preview"
 
 const drafts = {
@@ -47,5 +47,7 @@ export const Pages: CollectionConfig = {
   ],
   hooks: {
     beforeChange: [pathFromSlug("")],
+    afterChange: [revalidatePublished],
+    afterDelete: [revalidateDeleted],
   },
 }

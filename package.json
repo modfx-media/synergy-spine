@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --import tsx --test lib/cms/mergeDesigned.test.ts",
     "cms:export": "node --env-file=.env.local --import tsx scripts/build-content-export.ts",
     "cms:import": "node --env-file=.env.local --import tsx scripts/cms-import.ts",
     "cms:validate-export": "node --env-file=.env.local --import tsx scripts/cms-validate-export.ts",

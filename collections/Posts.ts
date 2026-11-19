@@ -1,7 +1,7 @@
 import type { CollectionConfig } from "payload"
 
 import { publishedOrLoggedIn } from "@/collections/access"
-import { nullableUniqueText, pathFromSlug } from "@/collections/hooks"
+import { nullableUniqueText, pathFromSlug, revalidateDeleted, revalidatePublished } from "@/collections/hooks"
 import { previewURL } from "@/lib/cms/preview"
 
 export const Posts: CollectionConfig = {
@@ -48,5 +48,7 @@ export const Posts: CollectionConfig = {
   ],
   hooks: {
     beforeChange: [pathFromSlug("/blog")],
+    afterChange: [revalidatePublished],
+    afterDelete: [revalidateDeleted],
   },
 }

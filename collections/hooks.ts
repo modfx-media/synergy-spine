@@ -1,6 +1,14 @@
-import type { CollectionBeforeChangeHook, FieldHook, TextField } from "payload"
+import { revalidatePath } from "next/cache"
+import type {
+  CollectionAfterChangeHook,
+  CollectionAfterDeleteHook,
+  CollectionBeforeChangeHook,
+  FieldHook,
+  TextField,
+} from "payload"
 
 import { normalizePath } from "@/lib/cms/paths"
+import { pathsToRevalidate, pathsToRevalidateOnDelete } from "@/lib/cms/revalidate-paths"
 
 export const emptyToNull: FieldHook = ({ value }) => {
   if (value == null) return null
@@ -37,4 +45,26 @@ export function pathFromSlug(prefix = ""): CollectionBeforeChangeHook {
     }
     return data
   }
+}
+
+function safeRevalidate(path: string) {
+  if (!path.startsWith("/")) return
+  const normalized = normalizePath(path)
+  try {
+    revalidatePath(normalized)
+    if (normalized === "/blog" || normalized.startsWith("/blog/")) revalidatePath("/blog")
+    revalidatePath("/sitemap.xml")
+  } catch (error) {
+    console.error("[cms] revalidate failed", error)
+  }
+}
+
+export const revalidatePublished: CollectionAfterChangeHook = ({ doc, previousDoc }) => {
+  for (const path of pathsToRevalidate(doc, previousDoc)) safeRevalidate(path)
+  return doc
+}
+
+export const revalidateDeleted: CollectionAfterDeleteHook = ({ doc }) => {
+  for (const path of pathsToRevalidateOnDelete(doc)) safeRevalidate(path)
+  return doc
 }
