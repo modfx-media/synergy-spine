@@ -12,10 +12,13 @@ import {
   cmsOnlyDocIsRenderable,
   cmsSchemaJsonLd,
   docHasRenderableContent,
+  isCmsOnlyBlogPost,
   mergeCmsJsonLd,
   mergeCmsMetadata,
+  mergeCmsOnlyPostHead,
   pickRoutedNode,
   selectRoutedBody,
+  TITLE_SUFFIX,
   TITLE_TEMPLATE,
   type RoutedDocLike,
 } from "./mergeDesigned"
@@ -182,7 +185,7 @@ test("a meta description edit changes only description tags", () => {
   assert.notEqual(meta.description, doc!.doc.excerpt)
 })
 
-test("title overlay keeps the layout template for string titles and absolute titles absolute", () => {
+test("CMS title uses the layout template, including on absolute designed titles, and does not double the suffix", () => {
   const layout = readFileSync(
     path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../app/(site)/layout.tsx"),
     "utf8",
@@ -198,13 +201,35 @@ test("title overlay keeps the layout template for string titles and absolute tit
   assert.equal(ogTitle(templated), "Patient-focused healing")
   assert.equal(templated.robots, ABOUT.robots)
 
-  const absolute = mergeCmsMetadata(
-    CONTACT,
-    { title: "Document title", meta: { title: "New contact title" } },
+  const sports = mergeCmsMetadata(
+    {
+      title: { absolute: "Sports Injury Chiropractor in Tijeras, NM | Synergy Spine and Nerve" },
+      description: "Designed sports description",
+      openGraph: {
+        title: "Sports Injury Chiropractor in Tijeras, NM | Synergy Spine and Nerve",
+        description: "Designed sports description",
+      },
+      robots: ABOUT.robots,
+    },
+    {
+      title: "Document title that must not win",
+      excerpt: "Excerpt that must not win",
+      meta: { title: "Sports Injury Chiropractor Tijeras NM | Active Recovery" },
+    },
   )
-  assert.deepEqual(absolute.title, { absolute: "New contact title" })
-  assert.equal(ogTitle(absolute), "New contact title")
-  assert.equal(absolute.description, CONTACT.description)
+  assert.equal(sports.title, "Sports Injury Chiropractor Tijeras NM | Active Recovery")
+  assert.equal(typeof sports.title, "string")
+  assert.equal(ogTitle(sports), "Sports Injury Chiropractor Tijeras NM | Active Recovery")
+  assert.equal(sports.robots, ABOUT.robots)
+  assert.equal(sports.description, "Designed sports description")
+
+  const alreadySuffixed = `Sports Injury Chiropractor Tijeras NM | Active Recovery | ${TITLE_SUFFIX}`
+  const once = mergeCmsMetadata(
+    CONTACT,
+    { meta: { title: alreadySuffixed } },
+  )
+  assert.deepEqual(once.title, { absolute: alreadySuffixed })
+  assert.equal(ogTitle(once), alreadySuffixed)
 })
 
 test("robots flags override only when checked and keep googleBot directives", () => {
@@ -305,6 +330,63 @@ test("generic renderer is only for CMS-only pages with real content", () => {
   )
   assert.match(html, /id="generic"/)
   assert.doesNotMatch(html, /designed-about/)
+})
+
+test("CMS-only blog posts use main's head and do not add a googlebot tag", () => {
+  assert.equal(isCmsOnlyBlogPost("/blog/neck-pain-self-screen-rio-rancho"), true)
+  assert.equal(isCmsOnlyBlogPost("/blog/sitting-is-the-new-sugar-daily-movement-for-a-healthier-spine"), false)
+  assert.equal(isCmsOnlyBlogPost("/about-us"), false)
+  assert.equal(isCmsOnlyBlogPost("/sports-injury-chiropractor-tijeras-nm"), false)
+
+  const fallback = {
+    title: { absolute: "Neck Pain Self-Screen in Rio Rancho: ROM Tests and When to Seek Care" },
+    description: "Imported excerpt",
+    alternates: { canonical: "https://synergyspineandnerve.com/blog/neck-pain-self-screen-rio-rancho/" },
+    openGraph: {
+      title: "Neck Pain Self-Screen in Rio Rancho: ROM Tests and When to Seek Care",
+      description: "Imported excerpt",
+      url: "https://synergyspineandnerve.com/blog/neck-pain-self-screen-rio-rancho/",
+      type: "article" as const,
+    },
+    robots: ABOUT.robots,
+  }
+  const head = mergeCmsOnlyPostHead(
+    fallback,
+    {
+      title: "Neck Pain Self-Screen in Rio Rancho: ROM Tests and When to Seek Care",
+      excerpt: "Imported excerpt",
+      meta: {
+        title: "Neck Pain Self-Check and Care Options in Rio Rancho",
+        description: "Try at-home range-of-motion tests.",
+        noIndex: false,
+        noFollow: false,
+      },
+    },
+    "/blog/neck-pain-self-screen-rio-rancho",
+  )
+  assert.equal(head.title, "Neck Pain Self-Check and Care Options in Rio Rancho")
+  assert.equal(typeof head.title, "string")
+  assert.equal(ogTitle(head), "Neck Pain Self-Check and Care Options in Rio Rancho")
+  assert.equal(head.description, "Try at-home range-of-motion tests.")
+  assert.deepEqual(head.robots, { index: true, follow: true })
+
+  const hidden = mergeCmsOnlyPostHead(
+    fallback,
+    { title: "Post", meta: { noIndex: true } },
+    "/blog/neck-pain-self-screen-rio-rancho",
+  )
+  assert.deepEqual(hidden.robots, { index: false, follow: true })
+
+  const designed = mergeCmsMetadata(ABOUT, {
+    meta: { title: "Chiropractic Clinic Rio Rancho | Patient-Centered Care", noIndex: false, noFollow: false },
+  })
+  assert.equal(designed.robots, ABOUT.robots)
+  assert.equal(
+    designed.robots && typeof designed.robots === "object" && designed.robots.googleBot && typeof designed.robots.googleBot === "object"
+      ? designed.robots.googleBot["max-image-preview"]
+      : undefined,
+    "large",
+  )
 })
 
 test("designed route detection ignores null and empty fragments", () => {

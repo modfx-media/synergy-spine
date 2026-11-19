@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 import { Fragment, isValidElement, type ReactNode } from "react"
 
+import { getPostBySlug } from "@/lib/blog-posts"
 import { mediaPublicURL } from "@/lib/cms/blog-index"
-import { publicPath } from "@/lib/cms/paths"
+import { isBlogArticlePath, normalizePath, publicPath } from "@/lib/cms/paths"
 import { SITE_ORIGIN } from "@/lib/site"
 
 /**
@@ -10,13 +11,13 @@ import { SITE_ORIGIN } from "@/lib/site"
  * component. A CMS document may fill SEO and schema fields that are actually
  * set. It must not swap the page for the generic renderer.
  *
- * Page titles stay in the same shape the designed page used. A string title
- * still runs through the root layout template
- * `%s | Synergy Spine & Nerve, Rio Rancho NM`. An absolute title stays
- * absolute, so that template is not added on top.
+ * A CMS `meta.title` is a string so the root layout template applies:
+ * `%s | Synergy Spine & Nerve, Rio Rancho NM`. If that suffix is already in
+ * the CMS title, the title is absolute and the template is not applied again.
  */
 
 export const TITLE_TEMPLATE = "%s | Synergy Spine & Nerve, Rio Rancho NM"
+export const TITLE_SUFFIX = "Synergy Spine & Nerve, Rio Rancho NM"
 
 /** Layout googleBot directives. Copied onto a robots override so they are not dropped. */
 const LAYOUT_GOOGLE_BOT = {
@@ -268,11 +269,18 @@ export function cmsSchemaJsonLd(
   )
 }
 
-function overlayTitle(current: Metadata["title"], cmsTitle: string): Metadata["title"] {
-  if (current && typeof current === "object" && "absolute" in current && current.absolute) {
-    return { absolute: cmsTitle }
-  }
+/** String titles pick up the layout template. A title that already has the suffix stays absolute. */
+export function titleForTemplate(cmsTitle: string): Metadata["title"] {
+  if (cmsTitle.includes(TITLE_SUFFIX)) return { absolute: cmsTitle }
   return cmsTitle
+}
+
+/** Blog URL with no local article. Those posts use main's head, which has no googlebot tag. */
+export function isCmsOnlyBlogPost(path: string): boolean {
+  if (!isBlogArticlePath(path)) return false
+  const slug = normalizePath(path).split("/").filter(Boolean)[1]
+  if (!slug) return false
+  return !getPostBySlug(slug)
 }
 
 function openGraphRecord(current: Metadata["openGraph"]): Record<string, unknown> | null {
@@ -339,8 +347,8 @@ function patchRobots(
 /**
  * Overlay only meta fields an editor actually set. Document title and excerpt
  * are not SEO fields. Unchecked robots flags leave the hardcoded robots and
- * googleBot tags unchanged. String titles stay strings so the layout template
- * still supplies the suffix. Absolute titles stay absolute.
+ * googleBot tags unchanged. `meta.title` goes through the layout template
+ * unless it already contains that suffix.
  */
 export function mergeCmsMetadata(
   fallback: Metadata,
@@ -366,7 +374,7 @@ export function mergeCmsMetadata(
     const twitter = twitterRecord(next.twitter)
     next = {
       ...next,
-      title: overlayTitle(next.title, seo.title),
+      title: titleForTemplate(seo.title),
       ...(openGraph ? { openGraph: { ...openGraph, title: seo.title } as Metadata["openGraph"] } : {}),
       ...(twitter ? { twitter: { ...twitter, title: seo.title } as Metadata["twitter"] } : {}),
     }
@@ -410,6 +418,54 @@ export function mergeCmsMetadata(
     next = { ...next, robots: patchRobots(next.robots, seo.noIndex, seo.noFollow) }
   }
   return next
+}
+
+/**
+ * Head for a CMS-only blog post. Matches main: title and description may fall
+ * back to the document title and excerpt, canonical is always set, and robots
+ * is only index/follow so the layout googlebot tag is not emitted.
+ */
+export function mergeCmsOnlyPostHead(
+  fallback: Metadata,
+  doc: Record<string, unknown> | null | undefined,
+  path: string,
+): Metadata {
+  if (!doc) return fallback
+  const meta = isRecord(doc.meta) ? doc.meta : {}
+  const title =
+    (typeof meta.title === "string" && meta.title) ||
+    (typeof doc.title === "string" && doc.title) ||
+    undefined
+  const description =
+    (typeof meta.description === "string" && meta.description) ||
+    (typeof doc.excerpt === "string" && doc.excerpt) ||
+    undefined
+  const canonical =
+    (typeof meta.canonicalUrl === "string" && meta.canonicalUrl) ||
+    `${SITE_ORIGIN}${publicPath(path)}`
+  const alternates =
+    fallback.alternates && typeof fallback.alternates === "object" ? fallback.alternates : {}
+  const openGraph =
+    fallback.openGraph && typeof fallback.openGraph === "object" && !Array.isArray(fallback.openGraph)
+      ? fallback.openGraph
+      : {}
+
+  return {
+    ...fallback,
+    ...(title ? { title: titleForTemplate(title) } : {}),
+    ...(description ? { description } : {}),
+    alternates: { ...alternates, canonical },
+    openGraph: {
+      ...openGraph,
+      ...(title ? { title } : {}),
+      ...(description ? { description } : {}),
+      url: canonical,
+    } as Metadata["openGraph"],
+    robots: {
+      index: meta.noIndex !== true,
+      follow: meta.noFollow !== true,
+    },
+  }
 }
 
 /** Base head for a CMS-only path. Designed pages pass their own fallback instead. */
