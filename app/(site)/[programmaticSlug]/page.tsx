@@ -20,6 +20,9 @@ import { buildEnrichedCopy } from "@/lib/programmatic/enrich";
 
 import BookTrigger from "@/components/booking/BookTrigger";
 import PhoneLeadLink from "@/components/analytics/PhoneLeadLink";
+import { RenderRoutedContent } from "@/components/cms/RenderRoutedContent";
+import { loadRoutedContent } from "@/lib/cms/load";
+import { cmsOnlyDocIsRenderable, cmsOnlyFallbackMetadata } from "@/lib/cms/mergeDesigned";
 import { withCMSMetadata } from "@/lib/cms/metadata";
 import {
   GEO,
@@ -81,7 +84,9 @@ function getAllProgrammaticSlugs(): string[] {
   return all;
 }
 
-export const dynamicParams = false;
+// Known city/service pages are still prebuilt. Any other single-segment URL can
+// be a CMS-only page; without content it 404s.
+export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<
   { programmaticSlug: string }[]
@@ -98,7 +103,13 @@ export async function generateMetadata({
 }: RouteProps): Promise<Metadata> {
   const { programmaticSlug } = await params;
   const parsed = parseSlug(programmaticSlug);
-  if (!parsed) return withCMSMetadata(`/${programmaticSlug}`, {});
+  if (!parsed) {
+    const routed = await loadRoutedContent(`/${programmaticSlug}`);
+    if (!cmsOnlyDocIsRenderable(routed)) {
+      return { title: "Page not found", robots: { index: false, follow: true } };
+    }
+    return withCMSMetadata(`/${programmaticSlug}`, cmsOnlyFallbackMetadata(routed.doc));
+  }
 
   const { service, city } = parsed;
   const url = `${SITE_ORIGIN}/${programmaticSlug}/`;
@@ -138,7 +149,11 @@ function fillCity(text: string, cityName: string): string {
 export default async function ProgrammaticPage({ params }: RouteProps) {
   const { programmaticSlug } = await params;
   const parsed = parseSlug(programmaticSlug);
-  if (!parsed) notFound();
+  if (!parsed) {
+    const routed = await loadRoutedContent(`/${programmaticSlug}`);
+    if (!cmsOnlyDocIsRenderable(routed)) notFound();
+    return <RenderRoutedContent doc={routed.doc} />;
+  }
 
   const { service, city } = parsed;
   const enriched = buildEnrichedCopy(service, city);
