@@ -11,9 +11,11 @@ import { SITE_ORIGIN } from "@/lib/site"
  * component. A CMS document may fill SEO and schema fields that are actually
  * set. It must not swap the page for the generic renderer.
  *
- * A CMS `meta.title` is a string so the root layout template applies:
- * `%s | Synergy Spine & Nerve, Rio Rancho NM`. If that suffix is already in
- * the CMS title, the title is absolute and the template is not applied again.
+ * A published CMS `meta.title` is an absolute document title. The root layout
+ * template (`%s | Synergy Spine & Nerve, Rio Rancho NM`) must not append the
+ * brand, and the same string is used for og:title and twitter:title. Titles
+ * that are not a published meta.title still pick up that template, unless
+ * they already contain the suffix.
  */
 
 export const TITLE_TEMPLATE = "%s | Synergy Spine & Nerve, Rio Rancho NM"
@@ -269,10 +271,39 @@ export function cmsSchemaJsonLd(
   )
 }
 
-/** String titles pick up the layout template. A title that already has the suffix stays absolute. */
-export function titleForTemplate(cmsTitle: string): Metadata["title"] {
-  if (cmsTitle.includes(TITLE_SUFFIX)) return { absolute: cmsTitle }
-  return cmsTitle
+/** Published `meta.title`. Absolute so the layout template does not append the brand. */
+export function absoluteMetaTitle(cmsTitle: string): Metadata["title"] {
+  return { absolute: cmsTitle }
+}
+
+/**
+ * Document titles that are not a published meta.title still pick up the layout
+ * template. A title that already contains the suffix stays absolute.
+ */
+export function titleForTemplate(title: string): Metadata["title"] {
+  if (title.includes(TITLE_SUFFIX)) return { absolute: title }
+  return title
+}
+
+/**
+ * Set twitter:title to a published meta.title without replacing the layout
+ * twitter object from a page. A page-level twitter object would drop the
+ * shared twitter-image attached to the root layout.
+ */
+export function applyPublishedTwitterTitle(
+  metadata: Metadata,
+  cmsTitle: string | undefined,
+): Metadata {
+  const title = nonEmpty(cmsTitle)
+  if (!title) return metadata
+  const twitter = twitterRecord(metadata.twitter) ?? {}
+  return {
+    ...metadata,
+    twitter: {
+      ...twitter,
+      title,
+    } as Metadata["twitter"],
+  }
 }
 
 /** Blog URL with no local article. Those posts use main's head, which has no googlebot tag. */
@@ -347,8 +378,8 @@ function patchRobots(
 /**
  * Overlay only meta fields an editor actually set. Document title and excerpt
  * are not SEO fields. Unchecked robots flags leave the hardcoded robots and
- * googleBot tags unchanged. `meta.title` goes through the layout template
- * unless it already contains that suffix.
+ * googleBot tags unchanged. A published `meta.title` is absolute, and
+ * `meta.description` is copied verbatim with no length clamp.
  */
 export function mergeCmsMetadata(
   fallback: Metadata,
@@ -374,7 +405,7 @@ export function mergeCmsMetadata(
     const twitter = twitterRecord(next.twitter)
     next = {
       ...next,
-      title: titleForTemplate(seo.title),
+      title: absoluteMetaTitle(seo.title),
       ...(openGraph ? { openGraph: { ...openGraph, title: seo.title } as Metadata["openGraph"] } : {}),
       ...(twitter ? { twitter: { ...twitter, title: seo.title } as Metadata["twitter"] } : {}),
     }
@@ -424,6 +455,8 @@ export function mergeCmsMetadata(
  * Head for a CMS-only blog post. Matches main: title and description may fall
  * back to the document title and excerpt, canonical is always set, and robots
  * is only index/follow so the layout googlebot tag is not emitted.
+ * A published meta.title is absolute. The document-title fallback still uses
+ * the layout template.
  */
 export function mergeCmsOnlyPostHead(
   fallback: Metadata,
@@ -432,10 +465,10 @@ export function mergeCmsOnlyPostHead(
 ): Metadata {
   if (!doc) return fallback
   const meta = isRecord(doc.meta) ? doc.meta : {}
-  const title =
-    (typeof meta.title === "string" && meta.title) ||
-    (typeof doc.title === "string" && doc.title) ||
-    undefined
+  const metaTitle = typeof meta.title === "string" && meta.title ? meta.title : undefined
+  const fallbackTitle =
+    !metaTitle && typeof doc.title === "string" && doc.title ? doc.title : undefined
+  const socialTitle = metaTitle || fallbackTitle
   const description =
     (typeof meta.description === "string" && meta.description) ||
     (typeof doc.excerpt === "string" && doc.excerpt) ||
@@ -452,12 +485,16 @@ export function mergeCmsOnlyPostHead(
 
   return {
     ...fallback,
-    ...(title ? { title: titleForTemplate(title) } : {}),
+    ...(metaTitle
+      ? { title: absoluteMetaTitle(metaTitle) }
+      : fallbackTitle
+        ? { title: titleForTemplate(fallbackTitle) }
+        : {}),
     ...(description ? { description } : {}),
     alternates: { ...alternates, canonical },
     openGraph: {
       ...openGraph,
-      ...(title ? { title } : {}),
+      ...(socialTitle ? { title: socialTitle } : {}),
       ...(description ? { description } : {}),
       url: canonical,
     } as Metadata["openGraph"],

@@ -6,6 +6,8 @@ import "./globals.css";
 import BookingProvider from "@/components/booking/BookingProvider";
 import BottomBookBar from "@/components/BottomBookBar";
 import { CMSRoute } from "@/components/cms/CMSRoute";
+import { loadRoutedContent } from "@/lib/cms/load";
+import { applyPublishedTwitterTitle, readCmsSeo } from "@/lib/cms/mergeDesigned";
 import { normalizePath } from "@/lib/cms/paths";
 import { cmsConfigured } from "@/lib/cms/queries";
 
@@ -19,7 +21,7 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+const rootMetadata: Metadata = {
   title: {
     default:
       "Chiropractor in Rio Rancho, NM | Synergy Spine & Nerve Center",
@@ -59,6 +61,15 @@ export const metadata: Metadata = {
     google: "dJ3k9kDSyULRLNB670eeUVggenhGH3OTvaZLABGgPAw",
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  if (!cmsConfigured()) return rootMetadata;
+  const pathname = (await headers()).get("x-pathname");
+  if (!pathname) return rootMetadata;
+  const routed = await loadRoutedContent(normalizePath(pathname));
+  const cmsTitle = routed ? readCmsSeo(routed.doc).title : undefined;
+  return applyPublishedTwitterTitle(rootMetadata, cmsTitle);
+}
 
 export default async function RootLayout({
   children,
